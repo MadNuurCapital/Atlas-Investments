@@ -136,6 +136,126 @@ export type ReviewHoldingSnapshot = {
   snapshot_at: string;
 };
 
+export type FundRiskLevel =
+  | "very_low"
+  | "low"
+  | "moderate"
+  | "moderately_high"
+  | "high"
+  | "very_high";
+export type ShariahStatus = "shariah" | "conventional" | "unknown";
+export type DistributionType = "accumulation" | "distribution";
+export type DistributionFrequency =
+  | "none"
+  | "monthly"
+  | "quarterly"
+  | "semi_annual"
+  | "annual"
+  | "irregular";
+export type FundDataSource = "manual" | "csv" | "yahoo";
+export type VerificationStatus = "unverified" | "verified" | "rejected";
+export type RefreshStatus = "success" | "partial" | "failed";
+export type AllocationKind = "asset_class" | "region" | "top_holding";
+
+export type Fund = {
+  id: string;
+  name: string;
+  share_class: string;
+  isin: string | null;
+  fund_manager: string | null;
+  currency: string;
+  category: string | null;
+  risk_level: FundRiskLevel | null;
+  shariah_status: ShariahStatus;
+  distribution_type: DistributionType;
+  distribution_frequency: DistributionFrequency;
+  latest_nav: number | null;
+  nav_date: string | null;
+  perf_1m: number | null;
+  perf_6m: number | null;
+  perf_1y: number | null;
+  perf_3y: number | null;
+  perf_5y: number | null;
+  perf_since_inception: number | null;
+  inception_date: string | null;
+  description: string | null;
+  factsheet_url: string | null;
+  data_source: FundDataSource;
+  source_identifier: string | null;
+  source_verified: boolean;
+  source_verified_at: string | null;
+  source_verified_by: string | null;
+  auto_refresh_enabled: boolean;
+  last_refresh_at: string | null;
+  last_refresh_status: RefreshStatus | null;
+  last_refresh_error: string | null;
+  verification_status: VerificationStatus;
+  is_sample: boolean;
+  is_archived: boolean;
+  archive_reason: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FundAllocation = {
+  id: string;
+  fund_id: string;
+  kind: AllocationKind;
+  label: string;
+  weight: number;
+  as_of_date: string | null;
+  sort_order: number;
+  created_at: string;
+};
+
+export type FundNavPoint = {
+  id: string;
+  fund_id: string;
+  nav_date: string;
+  nav: number;
+  source: FundDataSource;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type FundRefreshRun = {
+  id: string;
+  started_at: string;
+  finished_at: string | null;
+  status: RefreshStatus | null;
+  funds_attempted: number;
+  funds_succeeded: number;
+  funds_failed: number;
+  details: Json;
+  error_message: string | null;
+  triggered_by: string;
+};
+
+export type FundWatchlistEntry = {
+  id: string;
+  user_id: string;
+  fund_id: string;
+  created_at: string;
+};
+
+export type CurrencyRate = {
+  id: string;
+  currency_code: string;
+  rate_to_sgd: number;
+  rate_date: string;
+  source: FundDataSource;
+  updated_by: string | null;
+  created_at: string;
+};
+
+export type AppSetting = {
+  key: string;
+  value: Json;
+  description: string | null;
+  updated_by: string | null;
+  updated_at: string;
+};
+
 export type AuditEvent = {
   id: string;
   actor_id: string | null;
@@ -241,6 +361,61 @@ export type Database = {
         never,
         [Relationship<"client_id", "clients">, Relationship<"actor_id", "profiles">]
       >;
+      funds: Table<Fund, { name: string } & Partial<Fund>, Partial<Fund>, []>;
+      fund_allocations: Table<
+        FundAllocation,
+        { fund_id: string; kind: AllocationKind; label: string; weight: number } & Partial<FundAllocation>,
+        Partial<FundAllocation>,
+        [Relationship<"fund_id", "funds">]
+      >;
+      fund_nav_history: Table<
+        FundNavPoint,
+        { fund_id: string; nav_date: string; nav: number } & Partial<FundNavPoint>,
+        Partial<FundNavPoint>,
+        [Relationship<"fund_id", "funds">]
+      >;
+      fund_refresh_runs: Table<
+        FundRefreshRun,
+        Partial<FundRefreshRun>,
+        Partial<FundRefreshRun>,
+        []
+      >;
+      fund_watchlists: Table<
+        FundWatchlistEntry,
+        { user_id: string; fund_id: string },
+        never,
+        [Relationship<"fund_id", "funds">, Relationship<"user_id", "profiles">]
+      >;
+      currency_rates: Table<
+        CurrencyRate,
+        { currency_code: string; rate_to_sgd: number; rate_date: string } & Partial<CurrencyRate>,
+        Partial<CurrencyRate>,
+        []
+      >;
+      app_settings: Table<
+        AppSetting,
+        { key: string; value: Json } & Partial<AppSetting>,
+        Partial<AppSetting>,
+        []
+      >;
+      csv_import_jobs: Table<
+        {
+          id: string;
+          actor_id: string | null;
+          target: string;
+          fund_id: string | null;
+          filename: string | null;
+          row_count: number;
+          valid_count: number;
+          error_count: number;
+          errors: Json;
+          status: string;
+          created_at: string;
+        },
+        { target: string } & Record<string, unknown>,
+        Record<string, unknown>,
+        [Relationship<"fund_id", "funds">]
+      >;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -258,6 +433,14 @@ export type Database = {
       transaction_type: TransactionType;
       review_status: ReviewStatus;
       audit_scope: AuditScope;
+      fund_risk_level: FundRiskLevel;
+      shariah_status: ShariahStatus;
+      distribution_type: DistributionType;
+      distribution_frequency: DistributionFrequency;
+      fund_data_source: FundDataSource;
+      verification_status: VerificationStatus;
+      refresh_status: RefreshStatus;
+      allocation_kind: AllocationKind;
     };
     CompositeTypes: { [_ in never]: never };
   };
