@@ -18,28 +18,43 @@ export PGPORT="${PGPORT:-54322}"
 export PGUSER="${PGUSER:-postgres}"
 DB="${ATLAS_TEST_DB:-atlas_rls_test}"
 
-echo "→ Rebuilding ${DB} on ${PGHOST}:${PGPORT}"
-psql -q -d postgres -c "drop database if exists ${DB};" >/dev/null
-psql -q -d postgres -c "create database ${DB};" >/dev/null
+# Each test file gets a database built from scratch. Slower than sharing
+# one, but test files cannot then contaminate each other's fixtures — and
+# it re-proves on every run that the migrations build a clean database from
+# nothing, which is the guarantee wanted before any deploy.
+build_database() {
+  # `local` is not optional here. Without it this function would clobber the
+  # caller's loop variable, and the runner would silently re-apply the last
+  # migration instead of running the test file.
+  local sql_file
 
-echo "→ Applying Supabase test shim"
-for file in supabase/tests/harness/*.sql; do
-  psql -q -v ON_ERROR_STOP=1 -d "${DB}" -f "${file}" >/dev/null
+  # FORCE disconnects any session still holding the database open. Without
+  # it a lingering connection makes the drop fail and the old schema
+  # survives into the next run.
+  psql -q -v ON_ERROR_STOP=1 -d postgres \
+    -c "drop database if exists ${DB} with (force);" >/dev/null 2>&1
+  psql -q -v ON_ERROR_STOP=1 -d postgres -c "create database ${DB};" >/dev/null
+
+  for sql_file in supabase/tests/harness/*.sql; do
+    psql -q -v ON_ERROR_STOP=1 -d "${DB}" -f "${sql_file}" >/dev/null
+  done
+  for sql_file in supabase/migrations/*.sql; do
+    psql -q -v ON_ERROR_STOP=1 -d "${DB}" -f "${sql_file}" >/dev/null
+  done
+}
+
+echo "→ Migrations to apply:"
+for migration in supabase/migrations/*.sql; do
+  echo "   $(basename "${migration}")"
 done
 
-echo "→ Applying migrations"
-for file in supabase/migrations/*.sql; do
-  echo "   $(basename "${file}")"
-  psql -q -v ON_ERROR_STOP=1 -d "${DB}" -f "${file}" >/dev/null
-done
-
-echo "→ Running RLS tests"
 status=0
-for file in supabase/tests/*.test.sql; do
+for test_file in supabase/tests/*.test.sql; do
   echo ""
-  echo "   $(basename "${file}")"
+  echo "→ $(basename "${test_file}") (fresh database)"
+  build_database
   # Assertions are reported through RAISE NOTICE, which psql writes to stderr.
-  if ! psql -q -v ON_ERROR_STOP=1 -d "${DB}" -f "${file}" 2>&1; then
+  if ! psql -q -v ON_ERROR_STOP=1 -d "${DB}" -f "${test_file}" 2>&1; then
     status=1
   fi
 done

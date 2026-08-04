@@ -37,4 +37,22 @@ export function Button({ className, variant, size, ...props }: ButtonProps) {
   );
 }
 
+/**
+ * A link styled as a button.
+ *
+ * Kept as a separate component rather than an `asChild` prop on Button: a
+ * navigation control should render an anchor so it keeps middle-click,
+ * open-in-new-tab and the correct role for assistive technology.
+ */
+export function LinkButton({
+  className,
+  variant,
+  size,
+  ...props
+}: React.AnchorHTMLAttributes<HTMLAnchorElement> & VariantProps<typeof buttonVariants>) {
+  return (
+    <a className={cn(buttonVariants({ variant, size }), className)} {...props} />
+  );
+}
+
 export { buttonVariants };
