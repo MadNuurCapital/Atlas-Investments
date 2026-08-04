@@ -1,0 +1,186 @@
+@import "tailwindcss";
+
+/*
+ * Atlas Investments — design tokens
+ * Integrated Barakah Wealth Advisory
+ *
+ * Colours are derived from the Atlas Investments logo.
+ * Every brand value lives in this file and nowhere else, so replacing the
+ * palette (for example after extracting exact values from the official
+ * logo file) is a single-file change.
+ *
+ * IMPORTANT — two yellows, deliberately kept apart:
+ *   --brand-gold  is the Atlas brand accent (logo, active nav marker).
+ *   --warning     is the status colour for stale data and overdue reviews.
+ * They must never be the same value. If "Atlas" and "something is wrong"
+ * look identical, the interface stops communicating.
+ */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* --- Atlas brand ------------------------------------------------- */
+  --brand-50: #eef4fa;
+  --brand-100: #d6e5f2;
+  --brand-200: #adc9e3;
+  --brand-300: #7ba7d0;
+  --brand-400: #4a90d9;
+  --brand-500: #1b5586; /* Atlas Blue — primary, taken from the logo */
+  --brand-600: #164a75;
+  --brand-700: #113a5c;
+  --brand-800: #0d2c46;
+  --brand-900: #091f31;
+
+  --brand-gold: #f4d35e; /* Logo accent square. Brand only, never status. */
+  --brand-gold-strong: #d9b53f;
+
+  /* The blue the logo mark and wordmark actually render in. Steps up in dark
+     mode so the mark stays legible instead of sinking into the background. */
+  --logo-blue: var(--brand-500);
+
+  /* --- Surfaces ----------------------------------------------------- */
+  --background: #f7f9fb;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #eef2f6;
+  --border: #dde5ec;
+  --border-strong: #c3d0dc;
+
+  /* --- Text --------------------------------------------------------- */
+  --foreground: #0f1d2a;
+  --muted-foreground: #5b7186;
+  --subtle-foreground: #8296a8;
+
+  /* --- Status ------------------------------------------------------- */
+  --positive: #10775c;
+  --positive-surface: #e6f4ef;
+  --negative: #b3261e;
+  --negative-surface: #fbeae9;
+  --warning: #a16207; /* stale / overdue — distinct from --brand-gold */
+  --warning-surface: #fdf5e3;
+  --info: var(--brand-500);
+  --info-surface: var(--brand-50);
+  --neutral-surface: #eef2f6;
+
+  --ring: var(--brand-400);
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Atlas Blue is too dark to read on a dark surface, so the mark and
+     accents step up to --brand-400 while the scale itself is unchanged. */
+  --background: #0b1520;
+  --surface: #121e2b;
+  --surface-raised: #172636;
+  --surface-sunken: #0e1926;
+  --border: #23374a;
+  --border-strong: #334c63;
+
+  --foreground: #e8eef4;
+  --muted-foreground: #9bb0c3;
+  --subtle-foreground: #708498;
+
+  --positive: #4ec49b;
+  --positive-surface: #0f2b24;
+  --negative: #f2857c;
+  --negative-surface: #331716;
+  --warning: #e0b44c;
+  --warning-surface: #2e2413;
+  --info: var(--brand-400);
+  --info-surface: #12283c;
+  --neutral-surface: #1a2937;
+
+  --logo-blue: var(--brand-400);
+  --ring: var(--brand-400);
+}
+
+@theme inline {
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-gold-strong: var(--brand-gold-strong);
+
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+
+  --color-positive: var(--positive);
+  --color-positive-surface: var(--positive-surface);
+  --color-negative: var(--negative);
+  --color-negative-surface: var(--negative-surface);
+  --color-warning: var(--warning);
+  --color-warning-surface: var(--warning-surface);
+  --color-info: var(--info);
+  --color-info-surface: var(--info-surface);
+  --color-neutral-surface: var(--neutral-surface);
+
+  --color-ring: var(--ring);
+
+  --radius-md: var(--radius);
+
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Tabular figures everywhere money and dates are compared in a column.
+     Without this, digits shift width and columns of currency look ragged. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Visible, consistent focus. Required for keyboard navigation. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/*
+ * Print / PDF safety.
+ * Client-facing output is always light, regardless of the advisor's theme.
+ */
+@media print {
+  :root,
+  .dark {
+    --background: #ffffff;
+    --surface: #ffffff;
+    --surface-raised: #ffffff;
+    --surface-sunken: #f4f6f8;
+    --foreground: #0f1d2a;
+    --muted-foreground: #4a5f73;
+    --border: #d5dee6;
+    --positive: #0b5d48;
+    --negative: #8f1f19;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

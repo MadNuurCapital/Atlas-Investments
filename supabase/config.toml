@@ -1,0 +1,42 @@
+project_id = "atlas-investments"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+# Local email catcher, so invitation and reset emails can be tested
+# without sending anything to a real address.
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+
+# Accounts are invite-only. There is no public sign-up anywhere in the
+# product, and this is the setting that actually enforces it.
+enable_signup = false
+
+[auth.email]
+enable_signup = false
+enable_confirmations = true
+double_confirm_changes = true
+# Length beats forced symbol classes for real-world password strength.
+# Matches the 12-character minimum enforced in the application.
