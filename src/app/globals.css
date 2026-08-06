@@ -20,16 +20,15 @@
 
 :root {
   /* --- Atlas brand -------------------------------------------------
-   * Sampled from the supplied logo file
-   * (src/components/brand/atlas-investments.svg).
+   * Sampled from the firm's supplied artwork (public/brand/).
    *
-   * That file is an auto-trace of a raster image: it contains eighty
-   * near-identical blue shades where the original had one flat fill.
-   * Anti-aliasing only ever blends a fill TOWARDS the background, never
-   * away from it, so the most saturated blue in the trace is the closest
-   * to the true colour — #1a6597. The gold reads as #f6de6b by the same
-   * reasoning. If a clean vector original turns up, resample and replace
-   * these two values; nothing else needs to change.
+   * Every file supplied so far has been raster — anti-aliasing spreads one
+   * flat fill across dozens of near-identical shades. Anti-aliasing only
+   * ever blends a fill TOWARDS the background, never away from it, so the
+   * most saturated blue in the file is the closest to the true colour —
+   * #1a6597. The gold reads as #f6de6b by the same reasoning. If a clean
+   * vector original turns up, resample and replace these two values;
+   * nothing else needs to change.
    */
   --brand-50: #edf4fa;
   --brand-100: #d5e6f2;

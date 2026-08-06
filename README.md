@@ -114,11 +114,23 @@ The service-role key is protected three ways:
    **Project Settings → API**.
 2. Put them in `.env.local` (never commit it) and in Netlify's environment
    variables.
-3. Apply migrations:
+3. Apply the migrations. Either the CLI:
    ```bash
    supabase link --project-ref <your-ref>
    supabase db push
    ```
+   …or, with no CLI to install, paste each file into the dashboard's
+   **SQL Editor** and run them **in this order** — later files depend on
+   tables and helper functions created by earlier ones:
+
+   | # | File |
+   | --- | --- |
+   | 1 | `supabase/migrations/20260804000001_foundation.sql` |
+   | 2 | `supabase/migrations/20260804000002_clients.sql` |
+   | 3 | `supabase/migrations/20260804000003_funds.sql` |
+   | 4 | `supabase/migrations/20260804000004_plans.sql` |
+
+   Each file must finish with "Success" before the next is run.
 4. **Turn off public sign-up** in **Authentication → Providers → Email**.
    `supabase/config.toml` sets this for local development; the hosted project
    is a separate setting and must be changed by hand.
@@ -276,8 +288,10 @@ money teach people to distrust every number on screen.
 4. **Gain/loss is deliberately simple** and does not account for the timing of
    cash flows. It is labelled "Simple gain/loss" throughout. It is not
    time-weighted return and not XIRR, and the application never claims it is.
-5. **The logo is a reproduction** pending the official vector file. See
-   `public/brand/README.md`.
+5. **The logo is the firm's own artwork, but raster.** The supplied file has
+   no transparency, so the mark sits on a white chip — invisible on light
+   surfaces, a deliberate white plate in dark mode. A true vector original
+   would let that chip go. See `public/brand/README.md`.
 
 ---
 

@@ -1,4 +1,4 @@
-import { AtlasMark } from "@/components/brand/atlas-logo";
+import { AtlasLogoPrint } from "@/components/brand/atlas-logo";
 import { ValueHistoryChart } from "@/components/value-history-chart";
 import {
   formatPercent,
@@ -64,27 +64,7 @@ export function ClientSnapshot({
           paddingBottom: 24,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <AtlasMark className="h-14 w-auto" />
-          <div style={{ lineHeight: 1.15 }}>
-            <div style={{ fontSize: 30, fontWeight: 600, letterSpacing: "0.08em", color: "#1a6597" }}>
-              ATLAS
-            </div>
-            <div style={{ fontSize: 17, color: "#1a6597" }}>Investments</div>
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 10,
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: "0.14em",
-                color: "#4a5f73",
-              }}
-            >
-              Integrated Barakah Wealth Advisory
-            </div>
-          </div>
-        </div>
+        <AtlasLogoPrint height={56} />
 
         <div style={{ textAlign: "right" }}>
           <div style={{ fontSize: 12, color: "#4a5f73" }}>Review date</div>
