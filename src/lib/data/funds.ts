@@ -1,13 +1,19 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { daysBetween, toISODate } from "@/lib/calc/dates";
 import type {
   Fund,
   FundAllocation,
   FundNavPoint,
   FundRiskLevel,
 } from "@/lib/supabase/types";
+import { fundDataHealth, type DataHealth } from "@/lib/funds/labels";
+
+// Re-exported so server components can keep importing from one place. The
+// definitions live in lib/funds/labels.ts because Client Components need
+// them too, and this module is server-only.
+export { RISK_LABELS, HEALTH_LABELS, fundDataHealth } from "@/lib/funds/labels";
+export type { DataHealth } from "@/lib/funds/labels";
 
 /**
  * Fund Centre data access.
@@ -15,42 +21,6 @@ import type {
  * Fund data is firm-wide reference data: every active user reads it, only an
  * administrator writes it. That is enforced by RLS, not here.
  */
-
-export const RISK_LABELS: Record<FundRiskLevel, string> = {
-  very_low: "Very low",
-  low: "Low",
-  moderate: "Moderate",
-  moderately_high: "Moderately high",
-  high: "High",
-  very_high: "Very high",
-};
-
-export type DataHealth = "current" | "stale" | "failed" | "missing" | "manual";
-
-/**
- * How trustworthy a fund's data is right now.
- *
- * "Manual" is a healthy state, not a degraded one — a fund maintained from
- * factsheets is working exactly as intended and must not be reported as a
- * problem. Only genuine problems are: a fetch that failed, a NAV that has
- * gone stale, and a fund with no NAV at all.
- */
-export function fundDataHealth(fund: Fund, staleAfterDays = 5): DataHealth {
-  if (fund.latest_nav === null || fund.nav_date === null) return "missing";
-  if (fund.last_refresh_status === "failed") return "failed";
-  if (!fund.auto_refresh_enabled) return "manual";
-  return daysBetween(fund.nav_date, toISODate(new Date())) > staleAfterDays
-    ? "stale"
-    : "current";
-}
-
-export const HEALTH_LABELS: Record<DataHealth, string> = {
-  current: "Current",
-  stale: "Stale",
-  failed: "Refresh failed",
-  missing: "No NAV recorded",
-  manual: "Manually managed",
-};
 
 export type FundListOptions = {
   search?: string;

@@ -1,21 +1,42 @@
 # Brand assets
 
-Place the official Atlas Investments logo files here:
+## What is here
 
-- `atlas-investments.svg` — preferred, vector
-- `atlas-investments.png` — acceptable, transparent background
+`atlas-investments-original.svg` — the file supplied by the firm.
 
-## Current status
+**It is a reference, not the asset the application renders.** It is an
+auto-trace of a raster image, which means:
 
-The application currently renders the mark from a hand-authored SVG in
-`src/components/brand/atlas-logo.tsx`, built to match the supplied artwork.
-It scales cleanly, recolours for light and dark themes, and adds about 1KB
-to the page instead of a raster download.
+- 80 separate paths in 80 near-identical blue shades, where the original
+  artwork had one flat fill. That is JPEG compression noise, vectorised.
+- An opaque white 2000 × 2000 background rectangle, so it renders as a
+  white block on a dark background.
+- Baked-in colours, so it cannot recolour for light and dark themes.
+- 38 KB, most of it padding around a small mark.
 
-Once the official file is committed here, compare the two side by side. If
-the reproduction is faithful, keep it — a themeable vector component is the
-better asset. If it differs, the component's geometry is a handful of
-rectangles and one path and is quick to correct.
+## What the application renders
 
-Brand colours live in `src/app/globals.css` under `:root`. Replacing the
-palette is a single-file change.
+`src/components/brand/atlas-logo.tsx` — a hand-authored SVG of the same
+mark. About 1 KB, scales cleanly, and recolours from the theme tokens, so
+it works on a light screen, a dark screen and a printed PDF alike.
+
+## Colours
+
+Sampled from the supplied file. Anti-aliasing only ever blends a fill
+*towards* the background, never away from it, so the most saturated blue in
+the trace is closest to the true colour:
+
+| Token | Value | Use |
+| --- | --- | --- |
+| Atlas Blue | `#1a6597` | Mark, wordmark, primary actions, links |
+| Atlas Blue (dark mode) | `#4a8fc2` | Same, stepped up so it stays legible |
+| Atlas Gold | `#f6de6b` | Brand accent only — never a status colour |
+
+All defined in `src/app/globals.css`. Changing the palette is a one-file edit.
+
+## If a clean original turns up
+
+A vector original — from the designer's source file rather than a trace —
+would be worth having. Two flat fills instead of eighty, no background
+rectangle, tight bounds. Drop it in here, resample the two hex values above,
+and correct the geometry in `atlas-logo.tsx` if it differs.

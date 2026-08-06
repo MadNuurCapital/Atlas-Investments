@@ -35,6 +35,61 @@ export type TransactionType =
   | "adjustment";
 export type ReviewStatus = "draft" | "completed";
 export type AuditScope = "client" | "system";
+export type CalculatorType =
+  | "projection"
+  | "target_contribution"
+  | "required_lump_sum"
+  | "retirement"
+  | "dividend_income"
+  | "hajj"
+  | "affordability";
+export type AssumptionMode = "overall" | "per_fund";
+export type DistributionMode = "reinvest" | "payout";
+
+export type SavedCalculation = {
+  id: string;
+  owner_id: string;
+  client_id: string | null;
+  calculator_type: CalculatorType;
+  title: string;
+  inputs: Json;
+  outputs: Json;
+  assumptions: Json;
+  engine_version: string;
+  notes: string | null;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PortfolioScenario = {
+  id: string;
+  owner_id: string;
+  client_id: string | null;
+  name: string;
+  assumption_mode: AssumptionMode;
+  conservative_rate: number;
+  moderate_rate: number;
+  growth_rate: number;
+  distribution_mode: DistributionMode;
+  initial_amount: number;
+  monthly_contribution: number;
+  years: number;
+  notes: string | null;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PortfolioScenarioItem = {
+  id: string;
+  scenario_id: string;
+  fund_id: string;
+  allocation: number;
+  assumed_rate: number | null;
+  sort_order: number;
+  created_at: string;
+};
 
 export type Profile = {
   id: string;
@@ -398,6 +453,31 @@ export type Database = {
         Partial<AppSetting>,
         []
       >;
+      saved_calculations: Table<
+        SavedCalculation,
+        {
+          owner_id: string;
+          calculator_type: CalculatorType;
+          title: string;
+          inputs: Json;
+          outputs: Json;
+          assumptions: Json;
+        } & Partial<SavedCalculation>,
+        Partial<SavedCalculation>,
+        [Relationship<"owner_id", "profiles">, Relationship<"client_id", "clients">]
+      >;
+      portfolio_scenarios: Table<
+        PortfolioScenario,
+        { owner_id: string; name: string } & Partial<PortfolioScenario>,
+        Partial<PortfolioScenario>,
+        [Relationship<"owner_id", "profiles">, Relationship<"client_id", "clients">]
+      >;
+      portfolio_scenario_items: Table<
+        PortfolioScenarioItem,
+        { scenario_id: string; fund_id: string; allocation: number } & Partial<PortfolioScenarioItem>,
+        Partial<PortfolioScenarioItem>,
+        [Relationship<"scenario_id", "portfolio_scenarios">, Relationship<"fund_id", "funds">]
+      >;
       csv_import_jobs: Table<
         {
           id: string;
@@ -424,6 +504,7 @@ export type Database = {
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       owns_client: { Args: { target_client_id: string }; Returns: boolean };
       owns_holding: { Args: { target_holding_id: string }; Returns: boolean };
+      owns_scenario: { Args: { target_scenario_id: string }; Returns: boolean };
     };
     Enums: {
       app_role: AppRole;
@@ -441,6 +522,9 @@ export type Database = {
       verification_status: VerificationStatus;
       refresh_status: RefreshStatus;
       allocation_kind: AllocationKind;
+      calculator_type: CalculatorType;
+      assumption_mode: AssumptionMode;
+      distribution_mode: DistributionMode;
     };
     CompositeTypes: { [_ in never]: never };
   };

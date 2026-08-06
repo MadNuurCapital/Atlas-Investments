@@ -19,20 +19,31 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* --- Atlas brand ------------------------------------------------- */
-  --brand-50: #eef4fa;
-  --brand-100: #d6e5f2;
-  --brand-200: #adc9e3;
-  --brand-300: #7ba7d0;
-  --brand-400: #4a90d9;
-  --brand-500: #1b5586; /* Atlas Blue — primary, taken from the logo */
-  --brand-600: #164a75;
-  --brand-700: #113a5c;
-  --brand-800: #0d2c46;
-  --brand-900: #091f31;
+  /* --- Atlas brand -------------------------------------------------
+   * Sampled from the supplied logo file
+   * (src/components/brand/atlas-investments.svg).
+   *
+   * That file is an auto-trace of a raster image: it contains eighty
+   * near-identical blue shades where the original had one flat fill.
+   * Anti-aliasing only ever blends a fill TOWARDS the background, never
+   * away from it, so the most saturated blue in the trace is the closest
+   * to the true colour — #1a6597. The gold reads as #f6de6b by the same
+   * reasoning. If a clean vector original turns up, resample and replace
+   * these two values; nothing else needs to change.
+   */
+  --brand-50: #edf4fa;
+  --brand-100: #d5e6f2;
+  --brand-200: #a9cbe3;
+  --brand-300: #74aad1;
+  --brand-400: #4a8fc2;
+  --brand-500: #1a6597; /* Atlas Blue — primary */
+  --brand-600: #155078;
+  --brand-700: #103d5c;
+  --brand-800: #0c2e45;
+  --brand-900: #08202f;
 
-  --brand-gold: #f4d35e; /* Logo accent square. Brand only, never status. */
-  --brand-gold-strong: #d9b53f;
+  --brand-gold: #f6de6b; /* Logo accent square. Brand only, never status. */
+  --brand-gold-strong: #d9bc3f;
 
   /* The blue the logo mark and wordmark actually render in. Steps up in dark
      mode so the mark stays legible instead of sinking into the background. */

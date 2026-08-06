@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/card";
-import { HEALTH_LABELS, type DataHealth } from "@/lib/data/funds";
+import { HEALTH_LABELS, type DataHealth } from "@/lib/funds/labels";
 import { formatSgDate } from "@/lib/format";
 
 /**

@@ -21,20 +21,23 @@ export function AtlasMark({ className }: { className?: string }) {
       fill="none"
     >
       {/* Accent square — the dot of the "i" */}
-      <rect width="59" height="53" fill="var(--brand-gold)" />
+      <rect width="51" height="51" fill="var(--brand-gold)" />
       {/* Stem of the "i" */}
-      <rect y="66" width="59" height="199" fill="var(--logo-blue)" />
+      <rect y="64" width="51" height="201" fill="var(--logo-blue)" />
       {/* Outer frame. evenodd punches a genuine hole rather than painting a
           white square on top, so the mark sits correctly on any background —
-          light, dark, or a PDF page. */}
+          light, dark, or a PDF page. Proportions measured against the
+          supplied artwork: the ring is thin at the sides and bottom and
+          deeper at the top. */}
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M71 0H283V265H71V0ZM113 68V210H245V68H113Z"
+        d="M71 0H283V265H71V0ZM112 66V224H246V66H112Z"
         fill="var(--logo-blue)"
       />
-      {/* Nested core square */}
-      <rect x="143" y="95" width="52" height="66" fill="var(--logo-blue)" />
+      {/* Nested core square, centred horizontally in the window and sitting
+          slightly above its vertical centre, as in the original. */}
+      <rect x="148" y="97" width="62" height="66" fill="var(--logo-blue)" />
     </svg>
   );
 }
