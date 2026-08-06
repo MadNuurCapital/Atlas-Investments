@@ -191,7 +191,46 @@
     --negative: #8f1f19;
   }
 
-  .no-print {
+  /* A4 portrait with a modest margin — the card supplies its own padding. */
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  /* Application chrome never reaches the page. */
+  .no-print,
+  aside,
+  header {
     display: none !important;
+  }
+
+  /* The print-only copy of the snapshot renders at full size. */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Scale the 1200px card down to the printable width of A4 and stop the
+     browser reflowing it — the layout is fixed by design. */
+  #client-snapshot {
+    width: 1200px !important;
+    transform: scale(0.157);
+    transform-origin: top left;
+    box-shadow: none !important;
+  }
+
+  body,
+  main {
+    overflow: visible !important;
+    height: auto !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Force colours through: browsers drop backgrounds when printing unless
+     told otherwise, which would strip the brand rule and the figure panels. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

@@ -9,8 +9,8 @@ client-facing summaries — from one place.
 > This is **not** a trading platform. There is no order execution, no
 > brokerage, no intraday data, no buy/sell recommendations and no crypto.
 
-**Status: Phase 1 of 5 complete** (foundation, authentication, security).
-See [Build phases](#build-phases).
+**Status: all five phases complete.** Not yet run against a live Supabase
+project — see [What has and has not been verified](#what-has-and-has-not-been-verified).
 
 ---
 
@@ -168,9 +168,15 @@ lacks (the `auth` schema, `auth.uid()`, `auth.role()`, the three roles). It
 lives outside `supabase/migrations/` and **is never applied to a real
 database**.
 
-Current coverage: **22 assertions, all passing** — including that an advisor
-cannot promote themselves, cannot read another advisor's profile, cannot
-insert or delete profiles, and that an admin cannot lock themselves out.
+Current coverage: **120 assertions across five files, all passing.**
+
+| File | Proves |
+| --- | --- |
+| `rls_profiles` | An advisor cannot promote themselves, read another's profile, insert or delete profiles; an admin cannot lock themselves out |
+| `rls_clients` | Advisor A cannot see, search, count or modify Advisor B's clients, holdings, transactions, reviews, snapshots or audit trail — **and an admin sees zero of all of them** |
+| `rls_funds` | Everyone reads fund data, only an admin writes it; auto-refresh cannot be enabled without a verified symbol; changing a symbol drops its verification |
+| `rls_plans` | Saved calculations and portfolio scenarios are private to their owner, and invisible to an admin |
+| `constraints` | The database refuses states that would corrupt a client's record |
 
 ---
 
@@ -194,11 +200,38 @@ never be indexed or embedded.
 
 | Phase | Contents | Status |
 | --- | --- | --- |
-| **1 — Foundation** | Repo, env validation, design tokens, themes, migrations, auth, invitations, profiles, roles, RLS foundation, app shell | ✅ **Complete** |
-| **2 — Clients and Reviews** | Client records, holdings, transactions, dividends, quarterly reviews, immutable snapshots, reminders | Next |
-| **3 — Fund Centre** | Admin fund management, NAV history, paste/CSV import, Yahoo adapter, symbol verification, scheduled refresh, watchlists, Data Health | Planned |
-| **4 — Calculators and Portfolio Builder** | Pure calculation library and tests, seven calculators, save-to-client, 3-fund comparison, 4–8 fund portfolio builder | Planned |
-| **5 — Reports and Hardening** | Client Snapshot, PDF, audit trail, error states, end-to-end tests, seed data, production checklist | Planned |
+| **1 — Foundation** | Repo, env validation, design tokens, themes, migrations, auth, invitations, profiles, roles, RLS foundation, app shell | ✅ |
+| **2 — Clients and Reviews** | Client records, holdings, transactions, dividends, quarterly reviews, immutable snapshots, reminders, audit trail | ✅ |
+| **3 — Fund Centre** | Admin fund management, NAV history, paste import, Yahoo adapter, symbol verification, scheduled refresh, watchlists, Data Health | ✅ |
+| **4 — Calculators and Portfolio Builder** | Projection engine and tests, seven calculators, save-to-client, 3-fund comparison, 4–8 fund portfolio builder | ✅ |
+| **5 — Reports** | Client Snapshot card, print-to-PDF, privacy boundary, seed data | ✅ |
+
+## What has and has not been verified
+
+**Verified, by running it:**
+
+| Check | Result |
+| --- | --- |
+| TypeScript, strict | clean |
+| ESLint | clean |
+| Unit tests | 143 passing |
+| Database assertions | 120 passing, against a real PostgreSQL built from the migrations |
+| Production build | 31 routes |
+| Secret-leak scan | no server secret in any browser bundle |
+
+**Not yet verified, and worth being plain about:**
+
+- **No live Supabase project has been connected.** Sign-in, invitations,
+  password reset and the admin user actions are written against the Supabase
+  API but have never run against a real one. The database rules are proven;
+  the auth round trip is not.
+- **The Yahoo adapter has never fetched a real fund.** Its failure handling
+  is written and its callers are tested, but no live symbol has been tried.
+  Coverage of Singapore-distributed funds is expected to be patchy.
+- **The scheduled function has not run on Netlify.** The endpoint and
+  batching logic exist; the schedule has not fired.
+- **No end-to-end browser tests.** Playwright is installed and used for
+  rendering checks, but the user journeys are not scripted yet.
 
 Screens that are not built say so plainly. They do **not** show sample charts
 or invented figures — placeholder analytics in a system holding real client
