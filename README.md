@@ -129,8 +129,16 @@ The service-role key is protected three ways:
    | 2 | `supabase/migrations/20260804000002_clients.sql` |
    | 3 | `supabase/migrations/20260804000003_funds.sql` |
    | 4 | `supabase/migrations/20260804000004_plans.sql` |
+   | 5 | `supabase/migrations/20260806000001_bootstrap_first_admin.sql` |
 
    Each file must finish with "Success" before the next is run.
+
+   File 5 is required before step 6 below will work. Without it,
+   `protect_profile_fields()` refuses the promotion with
+   `42501: Only an administrator may change a role or active status` —
+   the SQL editor carries no JWT, so it satisfies neither `is_admin()` nor
+   the service-role exemption, and on a new project there is no
+   administrator to satisfy `is_admin()` with.
 4. **Turn off public sign-up** in **Authentication → Providers → Email**.
    `supabase/config.toml` sets this for local development; the hosted project
    is a separate setting and must be changed by hand.
@@ -158,6 +166,7 @@ Migration `20260804000001_foundation.sql` establishes:
 | A deactivated Admin loses admin powers immediately | `is_admin()` checks `is_active` too |
 | Profiles are never deleted, only deactivated | `DELETE` revoked |
 | Accounts are created by invitation only | no `INSERT` policy; `handle_new_user()` trigger |
+| The **first** admin can be made from the SQL editor | same trigger — exempts sessions with no authenticated user, which RLS proves can only be someone already holding database credentials |
 
 Helper functions are `SECURITY DEFINER` with `search_path = ''`. Both matter:
 the first prevents infinite recursion when a policy on `profiles` needs to
@@ -180,11 +189,11 @@ lacks (the `auth` schema, `auth.uid()`, `auth.role()`, the three roles). It
 lives outside `supabase/migrations/` and **is never applied to a real
 database**.
 
-Current coverage: **120 assertions across five files, all passing.**
+Current coverage: **127 assertions across five files, all passing.**
 
 | File | Proves |
 | --- | --- |
-| `rls_profiles` | An advisor cannot promote themselves, read another's profile, insert or delete profiles; an admin cannot lock themselves out |
+| `rls_profiles` | An advisor cannot promote themselves, read another's profile, insert or delete profiles; an admin cannot lock themselves out; the first admin *can* be created from the SQL editor, and an anonymous caller cannot use the same route |
 | `rls_clients` | Advisor A cannot see, search, count or modify Advisor B's clients, holdings, transactions, reviews, snapshots or audit trail — **and an admin sees zero of all of them** |
 | `rls_funds` | Everyone reads fund data, only an admin writes it; auto-refresh cannot be enabled without a verified symbol; changing a symbol drops its verification |
 | `rls_plans` | Saved calculations and portfolio scenarios are private to their owner, and invisible to an admin |
@@ -227,7 +236,7 @@ never be indexed or embedded.
 | TypeScript, strict | clean |
 | ESLint | clean |
 | Unit tests | 143 passing |
-| Database assertions | 120 passing, against a real PostgreSQL built from the migrations |
+| Database assertions | 127 passing, against a real PostgreSQL built from the migrations |
 | Production build | 31 routes |
 | Secret-leak scan | no server secret in any browser bundle |
 

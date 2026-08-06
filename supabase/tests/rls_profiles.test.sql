@@ -260,7 +260,82 @@ select test.row_count(
   0,
   'A signed-out visitor sees no profiles at all'
 );
+
+-- This one guards the bootstrap hatch below. The hatch lets a session with
+-- no authenticated user change a role — safe only because RLS stops such a
+-- session reaching the trigger in the first place. An anonymous caller also
+-- has no `auth.uid()`, so if RLS ever stopped blocking it, the hatch would
+-- become a public privilege-escalation route. This assertion is what keeps
+-- that from happening quietly.
+select test.affected_rows(
+  $$update public.profiles set role = 'admin'
+     where id = '11111111-1111-1111-1111-111111111111'$$,
+  0,
+  'A signed-out visitor cannot promote anyone — RLS blocks it before the trigger'
+);
 reset role;
 commit;
+
+select test.row_count(
+  $$select 1 from public.profiles
+     where id = '11111111-1111-1111-1111-111111111111' and role = 'advisor'$$,
+  1,
+  'Advisor A is still an advisor after the anonymous attempt'
+);
+
+-- =====================================================================
+-- Bootstrapping the first administrator
+--
+-- Regression cover for the deadlock fixed in 20260806000001. A brand new
+-- project has no administrator, so the first one must be made from the SQL
+-- editor: database credentials, no JWT. Before the fix
+-- `protect_profile_fields()` rejected that with 42501, because the only
+-- exemption tested `auth.role() = 'service_role'` and the SQL editor sends
+-- no role claim at all. The result was a project that could not be set up.
+-- =====================================================================
+
+select test.act_as_sql_editor();
+
+-- Prove the fixture really is what the deadlock looked like: no JWT role,
+-- so the old service-role exemption would not have fired.
+select test.ok(
+  (select auth.uid()) is null and coalesce(auth.role(), '') <> 'service_role',
+  'The SQL editor session carries no authenticated user and no service role'
+);
+
+select test.affected_rows(
+  $$update public.profiles set role = 'admin'
+     where id = '22222222-2222-2222-2222-222222222222'$$,
+  1,
+  'The first administrator can be created from the SQL editor'
+);
+
+select test.row_count(
+  $$select 1 from public.profiles
+     where id = '22222222-2222-2222-2222-222222222222' and role = 'admin'$$,
+  1,
+  'The promotion is genuinely persisted, not merely left unrejected'
+);
+
+-- The hatch is only about who is asking. An advisor still cannot promote
+-- themselves through the application, which is the property that matters.
+begin;
+select test.login_as('11111111-1111-1111-1111-111111111111');
+-- Refused loudly, not silently: RLS lets an advisor update their OWN row,
+-- so the statement reaches the trigger and the trigger raises.
+select test.throws(
+  $$update public.profiles set role = 'admin'
+     where id = '11111111-1111-1111-1111-111111111111'$$,
+  'An advisor still cannot promote themselves after the bootstrap fix'
+);
+select test.logout();
+commit;
+
+select test.row_count(
+  $$select 1 from public.profiles
+     where id = '11111111-1111-1111-1111-111111111111' and role = 'advisor'$$,
+  1,
+  'Advisor A is still an advisor'
+);
 
 select test.report();

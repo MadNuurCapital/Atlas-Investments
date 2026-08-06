@@ -110,6 +110,27 @@ begin
 end;
 $$;
 
+/**
+ * Act as someone holding the database credentials directly — the Supabase
+ * SQL editor, or psql. There is no JWT at all, so `auth.uid()` is NULL and
+ * the JWT role is unset; RLS is bypassed by the connecting superuser.
+ *
+ * This is how the very first administrator is created on a new project, and
+ * it is deliberately NOT the same as the service role: the claims are
+ * cleared at session scope so a test cannot pass through the service-role
+ * exemption by accident.
+ */
+create or replace function test.act_as_sql_editor()
+returns void
+language plpgsql
+as $$
+begin
+  execute 'reset role';
+  perform set_config('request.jwt.claim.sub', '', false);
+  perform set_config('request.jwt.claim.role', '', false);
+end;
+$$;
+
 /** Become a signed-in application user, the way Supabase presents one. */
 create or replace function test.login_as(user_id uuid)
 returns void
