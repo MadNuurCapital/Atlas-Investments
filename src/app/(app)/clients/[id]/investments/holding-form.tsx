@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Field, Input, MoneyInput, Select, Textarea } from "@/components/ui/field";
-import { ErrorNotice } from "@/components/ui/card";
+import { FormNotice } from "@/components/ui/card";
 import type { FormState } from "../../actions";
 import type { ClientHolding, HoldingStatus } from "@/lib/supabase/types";
 
@@ -217,7 +217,7 @@ export function HoldingForm({
         />
       </Field>
 
-      {state.message && state.errors && <ErrorNotice>{state.message}</ErrorNotice>}
+      <FormNotice message={state.message} ok={state.ok} />
       {state.message && !state.errors && (
         <p className="text-sm text-[var(--positive)]" role="status">
           {state.message}

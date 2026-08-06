@@ -4,6 +4,7 @@ import {
   parseDateCell,
   parseNavCell,
   parseNavImport,
+  yearToDateReturn,
   trailingReturn,
 } from "./nav-import";
 
@@ -175,5 +176,52 @@ describe("trailingReturn", () => {
   it("returns null for too little data rather than zero", () => {
     expect(trailingReturn([], 12)).toBeNull();
     expect(trailingReturn([{ date: "2026-08-04", nav: 1 }], 12)).toBeNull();
+  });
+});
+
+describe("yearToDateReturn", () => {
+  it("measures from the last price of last year, not from 1 January", () => {
+    // The convention factsheets use. Measuring from the first trading day of
+    // the new year would silently omit that day's move.
+    const history = [
+      { date: "2025-12-31", nav: 1.0 },
+      { date: "2026-01-02", nav: 1.05 },
+      { date: "2026-08-04", nav: 1.2 },
+    ];
+    expect(yearToDateReturn(history)).toBeCloseTo(0.2, 10);
+  });
+
+  it("falls back to the last price BEFORE 31 December when markets were shut", () => {
+    // 31 December is not always a trading day, and a fund that did not price
+    // that day still has a year-end value.
+    const history = [
+      { date: "2025-12-29", nav: 2.0 },
+      { date: "2026-03-10", nav: 2.5 },
+    ];
+    expect(yearToDateReturn(history)).toBeCloseTo(0.25, 10);
+  });
+
+  it("returns null for a fund with no history from last year", () => {
+    // A fund launched in March has no year-to-date figure. Measuring from
+    // its launch price would report a partial year as a full one.
+    const launchedThisYear = [
+      { date: "2026-03-02", nav: 1.0 },
+      { date: "2026-08-04", nav: 1.15 },
+    ];
+    expect(yearToDateReturn(launchedThisYear)).toBeNull();
+  });
+
+  it("returns null rather than zero for too little data", () => {
+    expect(yearToDateReturn([])).toBeNull();
+    expect(yearToDateReturn([{ date: "2026-08-04", nav: 1 }])).toBeNull();
+  });
+
+  it("handles an unsorted history", () => {
+    const jumbled = [
+      { date: "2026-08-04", nav: 1.2 },
+      { date: "2025-12-31", nav: 1.0 },
+      { date: "2026-01-02", nav: 1.05 },
+    ];
+    expect(yearToDateReturn(jumbled)).toBeCloseTo(0.2, 10);
   });
 });

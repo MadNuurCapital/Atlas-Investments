@@ -18,6 +18,7 @@ import {
   requiredText,
 } from "@/lib/validation";
 import type { FormState } from "../clients/actions";
+import { PERF_KEYS, type PerfKey } from "@/lib/supabase/types";
 
 /**
  * Administrative actions.
@@ -79,6 +80,7 @@ const fundSchema = z.object({
     .transform((v) => (v === "" ? null : v)),
   inception_date: optionalDateField("Inception date"),
   source_identifier: optionalText(60),
+  perf_ytd: optionalFraction("Year-to-date return"),
   perf_1m: optionalFraction("1 month return"),
   perf_6m: optionalFraction("6 month return"),
   perf_1y: optionalFraction("1 year return"),
@@ -86,6 +88,29 @@ const fundSchema = z.object({
   perf_5y: optionalFraction("5 year return"),
   perf_since_inception: optionalFraction("Since inception return"),
 });
+
+/**
+ * Which figures this submission claims as hand-entered.
+ *
+ * A filled box is a claim; an empty box releases it. That gives an obvious
+ * way to hand a figure back to the automatic refresh — clear it and save —
+ * without a second control to explain.
+ *
+ * Derived from the PARSED values rather than the raw form, so "0" is a claim
+ * (zero is a real return) while whitespace is not.
+ */
+function claimedPerfKeys(parsed: z.infer<typeof fundSchema>): PerfKey[] {
+  const byKey: Record<PerfKey, number | null> = {
+    ytd: parsed.perf_ytd,
+    "1m": parsed.perf_1m,
+    "6m": parsed.perf_6m,
+    "1y": parsed.perf_1y,
+    "3y": parsed.perf_3y,
+    "5y": parsed.perf_5y,
+    since_inception: parsed.perf_since_inception,
+  };
+  return PERF_KEYS.filter((key) => byKey[key] !== null);
+}
 
 function readFundForm(formData: FormData) {
   const get = (key: string) => (formData.get(key) as string | null) ?? "";
@@ -104,6 +129,7 @@ function readFundForm(formData: FormData) {
     factsheet_url: get("factsheet_url"),
     inception_date: get("inception_date"),
     source_identifier: get("source_identifier"),
+    perf_ytd: get("perf_ytd"),
     perf_1m: get("perf_1m"),
     perf_6m: get("perf_6m"),
     perf_1y: get("perf_1y"),
@@ -125,7 +151,11 @@ export async function createFund(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("funds")
-    .insert({ ...parsed.data, share_class: parsed.data.share_class ?? "" })
+    .insert({
+      ...parsed.data,
+      share_class: parsed.data.share_class ?? "",
+      perf_manual_keys: claimedPerfKeys(parsed.data),
+    })
     .select("id")
     .single();
 
@@ -157,14 +187,18 @@ export async function updateFund(
   const supabase = await createClient();
   const { error } = await supabase
     .from("funds")
-    .update({ ...parsed.data, share_class: parsed.data.share_class ?? "" })
+    .update({
+      ...parsed.data,
+      share_class: parsed.data.share_class ?? "",
+      perf_manual_keys: claimedPerfKeys(parsed.data),
+    })
     .eq("id", fundId);
 
   if (error) return { message: `Could not save changes: ${error.message}` };
 
   revalidatePath("/funds");
   revalidatePath(`/funds/${fundId}`);
-  return { message: "Saved." };
+  return { ok: true, message: "Saved." };
 }
 
 /**
@@ -466,6 +500,43 @@ export async function setUserRole(
 
   await recordSystemAudit(profile.id, "profiles", userId, `set_role_${role}`);
   revalidatePath("/admin/users");
+}
+
+/**
+ * Correct another user's display name.
+ *
+ * Names are not identity here — the email is — so this is a typo fix, not a
+ * privilege operation. It is still audited, because a client snapshot carries
+ * the adviser's name and someone should be able to answer who changed it.
+ *
+ * Note what this action cannot do: `role` and `is_active` are not in the
+ * update, and `protect_profile_fields()` would refuse them regardless.
+ */
+export async function setUserName(
+  userId: string,
+  _prev: FormState & { ok?: boolean },
+  formData: FormData,
+): Promise<FormState & { ok?: boolean }> {
+  const profile = await requireAdmin();
+
+  const parsed = requiredText("Name", 120).safeParse(formData.get("full_name") ?? "");
+  if (!parsed.success) {
+    return { errors: { full_name: parsed.error.issues[0].message } };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ full_name: parsed.data })
+    .eq("id", userId);
+
+  if (error) return { message: `Could not save that name: ${error.message}` };
+
+  await recordSystemAudit(profile.id, "profiles", userId, "set_user_name");
+
+  revalidatePath("/admin/users");
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Name updated." };
 }
 
 /* ------------------------------------------------------------------ audit */

@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
-import { ErrorNotice } from "@/components/ui/card";
+import { FormNotice } from "@/components/ui/card";
 import type { FormState } from "./actions";
 import type { Client } from "@/lib/supabase/types";
 
@@ -85,7 +85,7 @@ export function ClientForm({
           {state.message}
         </p>
       )}
-      {state.message && state.errors && <ErrorNotice>{state.message}</ErrorNotice>}
+      <FormNotice message={state.message} ok={state.ok} />
 
       <div className="flex items-center gap-3 pt-1">
         <Submit label={submitLabel} />

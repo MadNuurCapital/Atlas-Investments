@@ -130,6 +130,7 @@ The service-role key is protected three ways:
    | 3 | `supabase/migrations/20260804000003_funds.sql` |
    | 4 | `supabase/migrations/20260804000004_plans.sql` |
    | 5 | `supabase/migrations/20260806000001_bootstrap_first_admin.sql` |
+   | 6 | `supabase/migrations/20260806000002_perf_provenance_and_ytd.sql` |
 
    Each file must finish with "Success" before the next is run.
 
@@ -189,7 +190,7 @@ lacks (the `auth` schema, `auth.uid()`, `auth.role()`, the three roles). It
 lives outside `supabase/migrations/` and **is never applied to a real
 database**.
 
-Current coverage: **127 assertions across five files, all passing.**
+Current coverage: **133 assertions across five files, all passing.**
 
 | File | Proves |
 | --- | --- |
@@ -197,7 +198,7 @@ Current coverage: **127 assertions across five files, all passing.**
 | `rls_clients` | Advisor A cannot see, search, count or modify Advisor B's clients, holdings, transactions, reviews, snapshots or audit trail — **and an admin sees zero of all of them** |
 | `rls_funds` | Everyone reads fund data, only an admin writes it; auto-refresh cannot be enabled without a verified symbol; changing a symbol drops its verification |
 | `rls_plans` | Saved calculations and portfolio scenarios are private to their owner, and invisible to an admin |
-| `constraints` | The database refuses states that would corrupt a client's record |
+| `constraints` | The database refuses states that would corrupt a client's record, and refuses a performance-period key that does not exist |
 
 ---
 
@@ -226,6 +227,7 @@ never be indexed or embedded.
 | **3 — Fund Centre** | Admin fund management, NAV history, paste import, Yahoo adapter, symbol verification, scheduled refresh, watchlists, Data Health | ✅ |
 | **4 — Calculators and Portfolio Builder** | Projection engine and tests, seven calculators, save-to-client, 3-fund comparison, 4–8 fund portfolio builder | ✅ |
 | **5 — Reports** | Client Snapshot card, print-to-PDF, privacy boundary, seed data | ✅ |
+| **6 — Executive Glass** | Design tokens, glass panels, gold accents, skeleton loading, account settings, performance provenance, year-to-date | ✅ |
 
 ## What has and has not been verified
 
@@ -235,9 +237,9 @@ never be indexed or embedded.
 | --- | --- |
 | TypeScript, strict | clean |
 | ESLint | clean |
-| Unit tests | 143 passing |
-| Database assertions | 127 passing, against a real PostgreSQL built from the migrations |
-| Production build | 31 routes |
+| Unit tests | 150 passing |
+| Database assertions | 133 passing, against a real PostgreSQL built from the migrations |
+| Production build | 33 routes |
 | Secret-leak scan | no server secret in any browser bundle |
 
 **Not yet verified, and worth being plain about:**
@@ -274,9 +276,21 @@ money teach people to distrust every number on screen.
 - **SGD renders as `S$`**, applied by hand. In the `en-SG` locale, `Intl`
   formats SGD as a bare `$`, indistinguishable from US dollars.
 - **Timestamps** are `timestamptz`; presentation is Asia/Singapore.
-- **Brand gold and warning amber are different colours** and must stay that
-  way. If "Atlas" and "something is wrong" look identical, the interface stops
+- **Three yellows, kept apart.** `--brand-gold` is the mark's own yellow;
+  `--accent-gold` is the interface accent (active nav, chart lines, dark-mode
+  buttons, the headline glow); `--warning` is stale data and overdue reviews,
+  and is deliberately **orange** so it can never be mistaken for either. If
+  "Atlas" and "something is wrong" look alike, the interface stops
   communicating.
+- **Gold never carries text on a light background.** Gold on white is about
+  1.4:1. On the light theme the primary button is Atlas Blue and the headline
+  figure is deep navy with a gold *glow*; gold leads the eye without
+  replacing ink. On dark, gold takes navy text at about 11:1.
+- **A typed performance figure outranks a derived one.** The scheduled
+  refresh writes only figures nobody has claimed — see
+  `funds.perf_manual_keys`.
+- **Every route has a `loading.tsx`.** A page that thinks for five seconds
+  while showing the previous screen reads as broken, not busy.
 - **Archive, never delete.**
 
 ---

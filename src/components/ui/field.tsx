@@ -1,10 +1,18 @@
 import * as React from "react";
 import { cn } from "@/lib/cn";
 
+/*
+ * `bg-surface-sunken` rather than `bg-surface`: on a glass panel a control
+ * that matches the panel disappears into it. Recessing the control instead of
+ * raising it keeps the panel reading as one continuous sheet.
+ */
 const CONTROL_CLASSES =
-  "w-full rounded-md border border-[var(--border-strong)] bg-surface px-3 text-sm text-foreground " +
+  "w-full rounded-[var(--radius)] border border-[var(--border-strong)] bg-surface-sunken px-3 text-sm text-foreground " +
+  "transition-[border-color,box-shadow] duration-150 " +
   "placeholder:text-subtle-foreground disabled:cursor-not-allowed disabled:opacity-60 " +
-  "aria-[invalid=true]:border-[var(--negative)]";
+  "hover:border-[var(--border-strong)]/80 " +
+  "focus:border-[var(--accent-gold)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)]/25 " +
+  "aria-[invalid=true]:border-[var(--negative)] aria-[invalid=true]:focus:ring-[var(--negative)]/25";
 
 export function Label({
   className,

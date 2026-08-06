@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { AlertTriangle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardTitle, ErrorNotice } from "@/components/ui/card";
+import { Card, CardTitle, FormNotice } from "@/components/ui/card";
 import { Field, Input, MoneyInput, Textarea } from "@/components/ui/field";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import {
@@ -307,7 +307,7 @@ export function ReviewForm({
         </Card>
       </div>
 
-      {state.message && <ErrorNotice>{state.message}</ErrorNotice>}
+      <FormNotice message={state.message} ok={state.ok} />
 
       <div className="flex items-center gap-3">
         <Submit label={isCorrection ? "Save correction" : "Complete review"} />

@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardTitle, ErrorNotice } from "@/components/ui/card";
+import { Card, CardTitle, FormNotice } from "@/components/ui/card";
 import { Field, Textarea } from "@/components/ui/field";
 import type { ImportState } from "../../actions";
 
@@ -53,7 +53,7 @@ export function NavImportPanel({
           />
         </Field>
 
-        {state.message && <ErrorNotice>{state.message}</ErrorNotice>}
+        <FormNotice message={state.message} ok={state.ok} />
 
         {state.summary && (
           <div

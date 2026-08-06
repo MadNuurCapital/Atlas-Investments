@@ -114,4 +114,106 @@ const result = await page.evaluate(async (uri) => {
 writeFileSync(OUT, Buffer.from(result.dataUrl.split(",")[1], "base64"));
 console.log(`${result.source} -> ${result.cropped}, transparent background`);
 
+/* ------------------------------------------------------------------ icon */
+
+/**
+ * The browser-tab icon, cut from the same artwork.
+ *
+ * A favicon is 32 CSS pixels across. The full lockup — mark plus "ATLAS
+ * Investments" plus a strapline — is unreadable at that size, so only the
+ * square mark is used. Its right-hand edge is found by scanning for the first
+ * run of empty columns after the mark rather than by hard-coding a number,
+ * so a re-supplied logo with different spacing still cuts correctly.
+ *
+ * The mark is placed on a white rounded square. Tab bars are white in some
+ * browsers and near-black in others, and Atlas Blue on near-black is too
+ * dim to recognise at 32px; a white tile reads on both.
+ */
+const ICON = resolve(root, "src/app/icon.png");
+
+const icon = await page.evaluate(async (uri) => {
+  const img = new Image();
+  img.src = uri;
+  await img.decode();
+
+  const W = img.naturalWidth;
+  const H = img.naturalHeight;
+  const src = document.createElement("canvas");
+  src.width = W;
+  src.height = H;
+  const sctx = src.getContext("2d", { willReadFrequently: true });
+  sctx.drawImage(img, 0, 0);
+  const d = sctx.getImageData(0, 0, W, H).data;
+
+  // Which columns contain any ink at all?
+  const occupied = new Uint8Array(W);
+  for (let x = 0; x < W; x++) {
+    for (let y = 0; y < H; y++) {
+      if (d[(y * W + x) * 4 + 3] > 12) {
+        occupied[x] = 1;
+        break;
+      }
+    }
+  }
+
+  // The mark ends at the first gap wide enough to be word spacing rather
+  // than a gap inside the mark itself.
+  const GAP = Math.max(8, Math.round(W * 0.02));
+  let markEnd = W;
+  let run = 0;
+  for (let x = 0; x < W; x++) {
+    if (occupied[x]) {
+      run = 0;
+    } else if (++run >= GAP) {
+      markEnd = x - run + 1;
+      break;
+    }
+  }
+
+  // Vertical extent of just that slice.
+  let top = H;
+  let bottom = -1;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < markEnd; x++) {
+      if (d[(y * W + x) * 4 + 3] > 12) {
+        if (y < top) top = y;
+        if (y > bottom) bottom = y;
+        break;
+      }
+    }
+  }
+
+  const mw = markEnd;
+  const mh = bottom - top + 1;
+
+  const SIZE = 512;
+  // Tight, but not edge to edge. At 32px every pixel given to the mark is
+  // worth having; the padding exists only so the white tile reads as a tile
+  // and the rounded corners are visible against a dark tab bar.
+  const PAD = 78;
+  const RADIUS = 104;
+
+  const out = document.createElement("canvas");
+  out.width = SIZE;
+  out.height = SIZE;
+  const ctx = out.getContext("2d");
+
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.roundRect(0, 0, SIZE, SIZE, RADIUS);
+  ctx.fill();
+
+  // Contain, never stretch — the mark is square-ish but not exactly square.
+  const box = SIZE - PAD * 2;
+  const scale = Math.min(box / mw, box / mh);
+  const dw = mw * scale;
+  const dh = mh * scale;
+  ctx.drawImage(src, 0, top, mw, mh, (SIZE - dw) / 2, (SIZE - dh) / 2, dw, dh);
+
+  return { mark: `${mw}x${mh}`, dataUrl: out.toDataURL("image/png") };
+}, `data:image/png;base64,${readFileSync(OUT).toString("base64")}`);
+
+writeFileSync(ICON, Buffer.from(icon.dataUrl.split(",")[1], "base64"));
+console.log(`icon: mark ${icon.mark} -> 512x512 on a white tile`);
+
 await browser.close();

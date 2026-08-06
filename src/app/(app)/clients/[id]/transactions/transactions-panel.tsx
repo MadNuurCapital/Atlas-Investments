@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge, Card, CardTitle, EmptyState, ErrorNotice } from "@/components/ui/card";
+import { Badge, Card, CardTitle, EmptyState, FormNotice } from "@/components/ui/card";
 import { Field, Input, MoneyInput, Select, Textarea } from "@/components/ui/field";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatSgDate, formatSgd } from "@/lib/format";
@@ -143,7 +143,7 @@ export function TransactionsPanel({
               <Textarea id="notes" name="notes" rows={2} />
             </Field>
 
-            {state.message && state.errors && <ErrorNotice>{state.message}</ErrorNotice>}
+            <FormNotice message={state.message} ok={state.ok} />
             {state.message && !state.errors && (
               <p className="text-sm text-[var(--positive)]" role="status">
                 {state.message}

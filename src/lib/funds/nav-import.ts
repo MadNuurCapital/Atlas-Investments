@@ -167,6 +167,42 @@ export function navReturn(from: number, to: number): number | null {
 }
 
 /**
+ * Year-to-date return: from the last price of last year to the latest price.
+ *
+ * Not expressible as a trailing period — "year to date" is a calendar
+ * question, and on 5 January it covers days while on 20 December it covers
+ * nearly a year.
+ *
+ * The baseline is the last observation on or before 31 December, which is
+ * the convention factsheets use: the year's first trading day opens from
+ * where the previous year closed, so measuring from 1 January would miss
+ * the move on that first day.
+ *
+ * Returns null if the history does not reach back into last year. A fund
+ * launched in March has no year-to-date figure, and inventing one from its
+ * launch price would silently report a partial year as a full one.
+ */
+export function yearToDateReturn(
+  history: readonly NavObservation[],
+): number | null {
+  if (history.length < 2) return null;
+
+  const sorted = [...history].sort((a, b) => a.date.localeCompare(b.date));
+  const latest = sorted.at(-1);
+  if (!latest) return null;
+
+  const year = Number(latest.date.slice(0, 4));
+  const baselineOnOrBefore = `${year - 1}-12-31`;
+
+  const start = [...sorted]
+    .reverse()
+    .find((point) => point.date <= baselineOnOrBefore);
+  if (!start) return null;
+
+  return navReturn(start.nav, latest.nav);
+}
+
+/**
  * Performance over a trailing period, computed from stored history.
  *
  * Uses the observation on or immediately before the target date rather than

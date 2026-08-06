@@ -37,6 +37,7 @@ export default async function FundPage({ params }: PageProps<"/funds/[id]">) {
   const rate = await getLatestRate(fund.currency);
 
   const periods = [
+    ["Year to date", fund.perf_ytd],
     ["1 month", fund.perf_1m],
     ["6 months", fund.perf_6m],
     ["1 year", fund.perf_1y],

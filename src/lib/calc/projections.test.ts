@@ -490,13 +490,23 @@ describe("validateAllocations", () => {
     expect(issues).toEqual([]);
   });
 
-  it("rejects fewer than four funds", () => {
+  it("accepts a two-fund portfolio", () => {
+    const issues = validateAllocations([fund("a", 0.6), fund("b", 0.4)]);
+    expect(issues).toEqual([]);
+  });
+
+  it("accepts a three-fund portfolio", () => {
     const issues = validateAllocations([
       fund("a", 0.5),
       fund("b", 0.3),
       fund("c", 0.2),
     ]);
-    expect(issues.some((i) => i.message.includes("at least 4"))).toBe(true);
+    expect(issues).toEqual([]);
+  });
+
+  it("rejects a single fund — that is a holding, not a portfolio", () => {
+    const issues = validateAllocations([fund("a", 1)]);
+    expect(issues.some((i) => i.message.includes("at least 2"))).toBe(true);
   });
 
   it("rejects more than eight funds", () => {

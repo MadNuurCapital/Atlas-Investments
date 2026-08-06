@@ -2,7 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { yahooProvider } from "./yahoo";
-import { trailingReturn } from "./nav-import";
+import { trailingReturn, yearToDateReturn } from "./nav-import";
 import type { FundDataProvider, NavObservation } from "./provider";
 
 /**
@@ -63,7 +63,9 @@ export async function refreshFunds(options?: {
 
   let query = supabase
     .from("funds")
-    .select("id, name, share_class, source_identifier, data_source, currency")
+    .select(
+      "id, name, share_class, source_identifier, data_source, currency, perf_manual_keys",
+    )
     .eq("auto_refresh_enabled", true)
     .eq("is_archived", false);
 
@@ -118,6 +120,7 @@ type FundRow = {
   source_identifier: string | null;
   data_source: string;
   currency: string;
+  perf_manual_keys: string[];
 };
 
 async function refreshOne(
@@ -200,16 +203,31 @@ async function refreshOne(
   // Performance is recomputed from stored history rather than taken from the
   // source, so every fund's figures are calculated the same way whatever
   // their origin — and a fund without enough history reports null, not zero.
+  //
+  // A figure an administrator typed from a factsheet is never overwritten.
+  // This job used to write all five unconditionally, which meant a fund with
+  // three weeks of downloaded prices would compute NULL for its five-year
+  // return and erase the number a person had read off a published document.
+  // The longer the period, the more certain the loss — exactly backwards.
+  const manual = new Set(fund.perf_manual_keys ?? []);
+  const derived: Record<string, number | null> = {};
+  const keep = (key: string, column: string, compute: () => number | null) => {
+    if (!manual.has(key)) derived[column] = compute();
+  };
+
+  keep("ytd", "perf_ytd", () => yearToDateReturn(history));
+  keep("1m", "perf_1m", () => trailingReturn(history, 1));
+  keep("6m", "perf_6m", () => trailingReturn(history, 6));
+  keep("1y", "perf_1y", () => trailingReturn(history, 12));
+  keep("3y", "perf_3y", () => trailingReturn(history, 36));
+  keep("5y", "perf_5y", () => trailingReturn(history, 60));
+
   await supabase
     .from("funds")
     .update({
       latest_nav: result.quote.nav ?? latest.nav,
       nav_date: result.quote.navDate ?? latest.date,
-      perf_1m: trailingReturn(history, 1),
-      perf_6m: trailingReturn(history, 6),
-      perf_1y: trailingReturn(history, 12),
-      perf_3y: trailingReturn(history, 36),
-      perf_5y: trailingReturn(history, 60),
+      ...derived,
       last_refresh_at: new Date().toISOString(),
       last_refresh_status: "success",
       last_refresh_error: null,

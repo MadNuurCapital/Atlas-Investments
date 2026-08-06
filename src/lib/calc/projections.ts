@@ -561,7 +561,17 @@ export function acrossScenarios<T>(
 
 export type PortfolioItem = { fundId: string; label: string; allocation: number };
 
-export const MIN_PORTFOLIO_FUNDS = 4;
+/**
+ * Two, not four.
+ *
+ * Four was chosen as a diversification floor, but it was the wrong place to
+ * enforce one: advisors legitimately model a two-fund core-and-satellite, or
+ * compare a pair before adding to them, and a calculator that refuses to
+ * calculate teaches people to work around it. Whether a portfolio is
+ * concentrated is a judgement for the advisor to make and to explain, not
+ * something arithmetic can decide.
+ */
+export const MIN_PORTFOLIO_FUNDS = 2;
 export const MAX_PORTFOLIO_FUNDS = 8;
 
 /**

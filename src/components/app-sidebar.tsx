@@ -11,6 +11,7 @@ import {
   Layers,
   Library,
   Settings,
+  UserCog,
   Users,
 } from "lucide-react";
 import { AtlasLogo } from "@/components/brand/atlas-logo";
@@ -34,6 +35,7 @@ const NAV: NavItem[] = [
   { href: "/calculators", label: "Calculators", Icon: Calculator },
   { href: "/saved", label: "Saved Plans", Icon: FolderOpen },
   { href: "/admin", label: "Admin", Icon: Settings, adminOnly: true },
+  { href: "/settings", label: "Your account", Icon: UserCog },
 ];
 
 export function AppSidebar({ role }: { role: AppRole }) {
@@ -44,7 +46,7 @@ export function AppSidebar({ role }: { role: AppRole }) {
   const items = NAV.filter((item) => !item.adminOnly || role === "admin");
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-[var(--border)] bg-surface">
+    <aside className="flex w-60 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--sidebar-bg)]">
       <div className="border-b border-[var(--border)] px-4 py-4">
         <Link href="/dashboard" aria-label="Atlas Investments — Dashboard">
           <AtlasLogo size="sm" />
@@ -59,22 +61,36 @@ export function AppSidebar({ role }: { role: AppRole }) {
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
+              /*
+               * prefetch is on by default for links in the viewport, and the
+               * whole sidebar is always in the viewport — so every screen is
+               * already being fetched before it is clicked. Left explicit
+               * because it is load-bearing for how fast this feels, and a
+               * future edit should have to think before removing it.
+               */
+              prefetch
               className={cn(
-                "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                "group relative flex items-center gap-3 rounded-[var(--radius)] px-3 py-2 text-sm transition-colors",
                 active
-                  ? "bg-[var(--info-surface)] font-medium text-[var(--brand-600)] dark:text-[var(--brand-300)]"
+                  ? "bg-[var(--sidebar-active-bg)] font-semibold text-[var(--sidebar-active-fg)]"
                   : "text-muted-foreground hover:bg-surface-sunken hover:text-foreground",
               )}
             >
-              {/* The gold marker is the one place brand gold appears in the
-                  interface chrome — it reads as "you are here", never status. */}
+              {/* The gold bar is "you are here", never status. It is the same
+                  accent as the headline figure and the chart lines, so the eye
+                  learns one colour for "this is the thing you want". */}
               {active && (
                 <span
                   aria-hidden
-                  className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-[var(--brand-gold)]"
+                  className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--accent-gold)] shadow-[0_0_10px_var(--accent-gold)]"
                 />
               )}
-              <Icon className="size-4 shrink-0" />
+              <Icon
+                className={cn(
+                  "size-4 shrink-0 transition-colors",
+                  active && "text-[var(--accent-gold)]",
+                )}
+              />
               {label}
             </Link>
           );

@@ -210,6 +210,25 @@ export type DistributionFrequency =
 export type FundDataSource = "manual" | "csv" | "yahoo";
 export type VerificationStatus = "unverified" | "verified" | "rejected";
 export type RefreshStatus = "success" | "partial" | "failed";
+
+/**
+ * The performance periods a fund reports.
+ *
+ * The order here is the order they are shown in, shortest first, and the
+ * database constrains `perf_manual_keys` to exactly this set — so a typo in
+ * a key cannot silently fail to protect a figure.
+ */
+export const PERF_KEYS = [
+  "ytd",
+  "1m",
+  "6m",
+  "1y",
+  "3y",
+  "5y",
+  "since_inception",
+] as const;
+
+export type PerfKey = (typeof PERF_KEYS)[number];
 export type AllocationKind = "asset_class" | "region" | "top_holding";
 
 export type Fund = {
@@ -226,12 +245,18 @@ export type Fund = {
   distribution_frequency: DistributionFrequency;
   latest_nav: number | null;
   nav_date: string | null;
+  perf_ytd: number | null;
   perf_1m: number | null;
   perf_6m: number | null;
   perf_1y: number | null;
   perf_3y: number | null;
   perf_5y: number | null;
   perf_since_inception: number | null;
+  /**
+   * Which performance figures a person entered, so the scheduled refresh
+   * leaves them alone. See migration 20260806000002 for why this exists.
+   */
+  perf_manual_keys: PerfKey[];
   inception_date: string | null;
   description: string | null;
   factsheet_url: string | null;

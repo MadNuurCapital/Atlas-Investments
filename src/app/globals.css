@@ -4,16 +4,26 @@
  * Atlas Investments — design tokens
  * Integrated Barakah Wealth Advisory
  *
- * Colours are derived from the Atlas Investments logo.
- * Every brand value lives in this file and nowhere else, so replacing the
- * palette (for example after extracting exact values from the official
- * logo file) is a single-file change.
+ * "Executive Glass": a light theme built on white, soft layered shadows and
+ * deep brand blue; a dark theme built on translucent navy panels over a
+ * blurred background, with gold carrying the accents.
  *
- * IMPORTANT — two yellows, deliberately kept apart:
- *   --brand-gold  is the Atlas brand accent (logo, active nav marker).
- *   --warning     is the status colour for stale data and overdue reviews.
- * They must never be the same value. If "Atlas" and "something is wrong"
- * look identical, the interface stops communicating.
+ * Every brand value lives in this file and nowhere else. Components consume
+ * the tokens, never raw hex, so the whole product re-skins from here.
+ *
+ * ------------------------------------------------------------------
+ * IMPORTANT — three yellows, deliberately kept apart:
+ *
+ *   --brand-gold   the Atlas mark's own yellow. Brand identity only.
+ *   --accent-gold  the interface accent: active nav, chart lines, dark-mode
+ *                  primary buttons, the headline glow.
+ *   --warning      stale data and overdue reviews.
+ *
+ * The first two are yellows and may sit together. --warning is deliberately
+ * pushed to ORANGE so it can never be mistaken for either. If "Atlas" and
+ * "something is wrong" look alike, the interface stops communicating — and
+ * on a screen holding client money that is not a cosmetic problem.
+ * ------------------------------------------------------------------
  */
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -26,9 +36,7 @@
    * flat fill across dozens of near-identical shades. Anti-aliasing only
    * ever blends a fill TOWARDS the background, never away from it, so the
    * most saturated blue in the file is the closest to the true colour —
-   * #1a6597. The gold reads as #f6de6b by the same reasoning. If a clean
-   * vector original turns up, resample and replace these two values;
-   * nothing else needs to change.
+   * #1a6597. The gold reads as #f6de6b by the same reasoning.
    */
   --brand-50: #edf4fa;
   --brand-100: #d5e6f2;
@@ -41,67 +49,163 @@
   --brand-800: #0c2e45;
   --brand-900: #08202f;
 
-  --brand-gold: #f6de6b; /* Logo accent square. Brand only, never status. */
+  --brand-gold: #f6de6b; /* The mark's own yellow. Identity, not interface. */
   --brand-gold-strong: #d9bc3f;
 
-  /* The blue the logo mark and wordmark actually render in. Steps up in dark
-     mode so the mark stays legible instead of sinking into the background. */
+  /* The interface accent. Vibrant enough to lead the eye to the one thing
+     that matters on a screen — the number, the active page, the action. */
+  --accent-gold: #facc15;
+  --accent-gold-strong: #eab308;
+  --accent-gold-deep: #a16207; /* For gold-as-text on a LIGHT surface. */
+
+  /* --- Navy ---------------------------------------------------------
+   * Derived from Atlas Blue rather than taken from a generic slate ramp,
+   * so the dark theme and the logo are the same family of blue. Hue is
+   * held near the brand's 205 degrees all the way down.
+   */
+  --navy-950: #05101a;
+  --navy-900: #0a1a27; /* sidebar and header */
+  --navy-850: #0d2131; /* page background */
+  --navy-800: #12293b; /* raised panel */
+  --navy-700: #1a3a52;
+  --navy-600: #24506f;
+
+  /* The blue the logo mark and wordmark render in. Steps up in dark mode so
+     the mark stays legible instead of sinking into the background. */
   --logo-blue: var(--brand-500);
 
   /* --- Surfaces ----------------------------------------------------- */
-  --background: #f7f9fb;
+  --background: #f4f7fa;
   --surface: #ffffff;
   --surface-raised: #ffffff;
-  --surface-sunken: #eef2f6;
-  --border: #dde5ec;
-  --border-strong: #c3d0dc;
+  --surface-sunken: #eef3f8;
+  --border: #e2eaf1;
+  --border-strong: #c7d5e2;
+
+  /* Glass. In light mode the panel is near-opaque white — a frosted pane
+     over a pale page reads as murk, not luxury. The blur still softens
+     anything scrolling beneath it. */
+  --surface-glass: rgba(255, 255, 255, 0.86);
+  --border-glass: rgba(255, 255, 255, 0.9);
+  --glass-blur: 14px;
+
+  /* Layered rather than single shadows: a tight contact shadow plus a wide
+     soft one is what makes a card look lifted instead of outlined. */
+  --shadow-card:
+    0 1px 2px rgba(12, 46, 69, 0.06),
+    0 8px 24px -12px rgba(12, 46, 69, 0.18);
+  --shadow-card-hover:
+    0 2px 4px rgba(12, 46, 69, 0.08),
+    0 16px 40px -16px rgba(12, 46, 69, 0.28);
+  --shadow-header: 0 1px 3px rgba(12, 46, 69, 0.06);
+
+  /* --- Chrome ------------------------------------------------------- */
+  --sidebar-bg: #ffffff;
+  --header-bg: rgba(255, 255, 255, 0.82);
+  --sidebar-active-bg: var(--brand-50);
+  --sidebar-active-fg: var(--brand-600);
 
   /* --- Text --------------------------------------------------------- */
-  --foreground: #0f1d2a;
-  --muted-foreground: #5b7186;
-  --subtle-foreground: #8296a8;
+  --foreground: #0c1d2b;
+  --muted-foreground: #55708a;
+  --subtle-foreground: #7b93a8;
+
+  /* --- Primary action ----------------------------------------------- */
+  --primary-bg: var(--brand-500);
+  --primary-bg-hover: var(--brand-600);
+  --primary-fg: #ffffff;
+  --primary-shadow: 0 1px 2px rgba(8, 32, 47, 0.24), 0 8px 20px -10px rgba(26, 101, 151, 0.6);
+
+  /* --- Headline figure ----------------------------------------------
+   * Gold text on white is about 1.4:1 — unreadable, and this screen holds
+   * client money. So on light the number stays deep navy and the GLOW is
+   * gold: the same jewellery, worn where it can be seen.
+   */
+  --headline-fg: var(--brand-700);
+  --headline-glow: drop-shadow(0 2px 14px rgba(234, 179, 8, 0.45));
 
   /* --- Status ------------------------------------------------------- */
-  --positive: #10775c;
-  --positive-surface: #e6f4ef;
+  --positive: #0f7a5c;
+  --positive-surface: #e3f4ee;
   --negative: #b3261e;
   --negative-surface: #fbeae9;
-  --warning: #a16207; /* stale / overdue — distinct from --brand-gold */
-  --warning-surface: #fdf5e3;
+  --warning: #b45309; /* ORANGE, never yellow — see the note at the top. */
+  --warning-surface: #fdf0e3;
+
+  /* Destructive controls carry their own fill, separate from --negative.
+     --negative is tuned to be READ as text on a surface; a button needs a
+     fill dark enough to take white lettering. On dark themes the two pull in
+     opposite directions, so they are separate tokens. */
+  --destructive-bg: #b3261e;
+  --destructive-fg: #ffffff;
   --info: var(--brand-500);
   --info-surface: var(--brand-50);
-  --neutral-surface: #eef2f6;
+  --neutral-surface: #eef3f8;
 
   --ring: var(--brand-400);
-  --radius: 0.5rem;
+  --radius: 0.625rem;
 }
 
 .dark {
-  /* Atlas Blue is too dark to read on a dark surface, so the mark and
-     accents step up to --brand-400 while the scale itself is unchanged. */
-  --background: #0b1520;
-  --surface: #121e2b;
-  --surface-raised: #172636;
-  --surface-sunken: #0e1926;
-  --border: #23374a;
-  --border-strong: #334c63;
+  --background: var(--navy-850);
+  --surface: var(--navy-800);
+  --surface-raised: #16324a;
+  --surface-sunken: #0a1a27;
+  --border: #1f4059;
+  --border-strong: #2c5878;
 
-  --foreground: #e8eef4;
-  --muted-foreground: #9bb0c3;
-  --subtle-foreground: #708498;
+  /* The real glass. Semi-transparent navy over a blurred backdrop, with a
+     hairline top edge that catches the light the way a real pane would. */
+  --surface-glass: rgba(18, 41, 59, 0.55);
+  --border-glass: rgba(96, 149, 189, 0.22);
+
+  --shadow-card:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 12px 32px -16px rgba(0, 0, 0, 0.7);
+  --shadow-card-hover:
+    0 2px 6px rgba(0, 0, 0, 0.5),
+    0 20px 48px -20px rgba(0, 0, 0, 0.85);
+  --shadow-header: 0 1px 0 rgba(96, 149, 189, 0.14);
+
+  --sidebar-bg: var(--navy-900);
+  --header-bg: rgba(10, 26, 39, 0.78);
+  --sidebar-active-bg: rgba(250, 204, 21, 0.1);
+  --sidebar-active-fg: var(--accent-gold);
+
+  --foreground: #e9f1f8;
+  --muted-foreground: #9db4c8;
+  --subtle-foreground: #7391ab;
+
+  /* Gold leads in dark mode. Navy text on gold is about 11:1 — this is the
+     one place the accent can carry a control without hurting anyone. */
+  --primary-bg: var(--accent-gold);
+  --primary-bg-hover: #fdd835;
+  --primary-fg: var(--navy-950);
+  --primary-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 8px 24px -8px rgba(250, 204, 21, 0.45);
+
+  --headline-fg: var(--accent-gold);
+  --headline-glow: drop-shadow(0 0 15px rgba(250, 204, 21, 0.5));
 
   --positive: #4ec49b;
-  --positive-surface: #0f2b24;
+  --positive-surface: rgba(16, 88, 70, 0.35);
   --negative: #f2857c;
-  --negative-surface: #331716;
-  --warning: #e0b44c;
-  --warning-surface: #2e2413;
+  --negative-surface: rgba(88, 30, 27, 0.45);
+  --warning: #fb923c; /* ORANGE. Must not be confused with the gold accent. */
+  --warning-surface: rgba(120, 53, 15, 0.38);
+
+  /* Not --negative. That value is a light salmon so it can be read as text
+     on navy; as a button fill it looks like a decorative pill rather than a
+     control that destroys something. */
+  --destructive-bg: #a32620;
+  --destructive-fg: #ffffff;
   --info: var(--brand-400);
-  --info-surface: #12283c;
-  --neutral-surface: #1a2937;
+  --info-surface: rgba(26, 101, 151, 0.22);
+  --neutral-surface: rgba(31, 64, 89, 0.5);
 
   --logo-blue: var(--brand-400);
-  --ring: var(--brand-400);
+  --ring: var(--accent-gold);
 }
 
 @theme inline {
@@ -117,6 +221,15 @@
   --color-brand-900: var(--brand-900);
   --color-brand-gold: var(--brand-gold);
   --color-brand-gold-strong: var(--brand-gold-strong);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-gold-strong: var(--accent-gold-strong);
+
+  --color-navy-600: var(--navy-600);
+  --color-navy-700: var(--navy-700);
+  --color-navy-800: var(--navy-800);
+  --color-navy-850: var(--navy-850);
+  --color-navy-900: var(--navy-900);
+  --color-navy-950: var(--navy-950);
 
   --color-background: var(--background);
   --color-surface: var(--surface);
@@ -172,9 +285,203 @@
   }
 }
 
+@layer components {
+  /*
+   * The page backdrop.
+   *
+   * Two very large, very faint radial washes — brand blue from the top left,
+   * gold from the bottom right. They are what the glass panels actually have
+   * something to refract; against a flat fill, a blurred panel looks merely
+   * grey. Fixed attachment so the wash stays put while content scrolls.
+   */
+  .app-backdrop {
+    background-color: var(--background);
+    background-image:
+      radial-gradient(
+        900px circle at 0% 0%,
+        color-mix(in srgb, var(--brand-500) 8%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        700px circle at 100% 100%,
+        color-mix(in srgb, var(--accent-gold) 7%, transparent),
+        transparent 55%
+      );
+    background-attachment: fixed;
+  }
+
+  .dark .app-backdrop {
+    background-image:
+      radial-gradient(
+        900px circle at 0% 0%,
+        color-mix(in srgb, var(--brand-500) 26%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        700px circle at 100% 100%,
+        color-mix(in srgb, var(--accent-gold) 9%, transparent),
+        transparent 55%
+      );
+  }
+
+  /*
+   * A glass panel.
+   *
+   * The inset top highlight is what sells it — real glass catches light on
+   * its top edge. Without that line this is just a translucent box.
+   *
+   * `backdrop-filter` is expensive to composite. It is applied to panels,
+   * not to rows inside them, which is why tables keep a solid surface.
+   */
+  .glass {
+    background-color: var(--surface-glass);
+    border: 1px solid var(--border-glass);
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  }
+
+  .dark .glass {
+    box-shadow:
+      var(--shadow-card),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .glass-hover {
+    transition:
+      box-shadow 180ms ease,
+      transform 180ms ease,
+      border-color 180ms ease;
+  }
+
+  .glass-hover:hover {
+    box-shadow: var(--shadow-card-hover);
+    border-color: color-mix(in srgb, var(--accent-gold) 30%, var(--border-glass));
+  }
+
+  /*
+   * The headline figure — the one number an advisor looks for first.
+   *
+   * `drop-shadow` rather than `text-shadow`: it follows the glyph outline
+   * so the halo hugs the digits instead of smearing behind the whole box.
+   */
+  .headline-figure {
+    color: var(--headline-fg);
+    filter: var(--headline-glow);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* A hairline gold rule. Used under section titles to carry the accent
+     without spending a whole control on it. */
+  .gold-rule::after {
+    content: "";
+    display: block;
+    width: 2rem;
+    height: 2px;
+    margin-top: 0.5rem;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      var(--accent-gold),
+      color-mix(in srgb, var(--accent-gold) 10%, transparent)
+    );
+  }
+
+  /*
+   * Range sliders with a gold track.
+   *
+   * Chromium and Firefox need separately-prefixed pseudo-elements; neither
+   * inherits the other's. The filled portion is painted with a background
+   * gradient set inline from the value, because no browser exposes a
+   * "progress" pseudo-element on a range input that both engines agree on.
+   */
+  .slider-gold {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 1.5rem;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .slider-gold::-webkit-slider-runnable-track {
+    height: 0.375rem;
+    border-radius: 999px;
+    background: var(--slider-track, var(--surface-sunken));
+  }
+
+  .slider-gold::-moz-range-track {
+    height: 0.375rem;
+    border-radius: 999px;
+    background: var(--slider-track, var(--surface-sunken));
+  }
+
+  .slider-gold::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin-top: -0.375rem;
+    border-radius: 999px;
+    background: var(--accent-gold);
+    border: 2px solid var(--surface);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(161, 98, 7, 0.35);
+    transition: transform 120ms ease;
+  }
+
+  .slider-gold::-moz-range-thumb {
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 999px;
+    background: var(--accent-gold);
+    border: 2px solid var(--surface);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(161, 98, 7, 0.35);
+  }
+
+  .slider-gold:active::-webkit-slider-thumb {
+    transform: scale(1.15);
+  }
+
+  .slider-gold:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-gold) 45%, transparent);
+  }
+
+  /* Skeleton block for loading screens. Its own class rather than bare
+     `animate-pulse` so the tone tracks the theme and every skeleton in the
+     product changes together. */
+  .skeleton {
+    border-radius: var(--radius);
+    background-color: color-mix(in srgb, var(--muted-foreground) 16%, transparent);
+    animation: skeleton-pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  /* Respect a user who has asked the operating system for less movement. */
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton {
+      animation: none;
+    }
+    .glass-hover {
+      transition: none;
+    }
+  }
+}
+
 /*
  * Print / PDF safety.
- * Client-facing output is always light, regardless of the advisor's theme.
+ *
+ * Client-facing output is always light, whatever the advisor's theme, and
+ * carries none of the glass or gold. A blurred translucent panel prints as
+ * grey mud, and the snapshot card is a document, not an interface.
  */
 @media print {
   :root,
@@ -183,11 +490,28 @@
     --surface: #ffffff;
     --surface-raised: #ffffff;
     --surface-sunken: #f4f6f8;
+    --surface-glass: #ffffff;
+    --border-glass: #d5dee6;
     --foreground: #0f1d2a;
     --muted-foreground: #4a5f73;
     --border: #d5dee6;
     --positive: #0b5d48;
     --negative: #8f1f19;
+    --headline-fg: #0f1d2a;
+    --headline-glow: none;
+  }
+
+  /* Glass and glow are screen effects. On paper they destroy legibility. */
+  .glass,
+  .app-backdrop {
+    background-image: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+
+  .headline-figure {
+    filter: none !important;
   }
 
   /* A4 portrait with a modest margin — the card supplies its own padding. */

@@ -134,6 +134,7 @@ export default async function FundsPage({ searchParams }: PageProps<"/funds">) {
               </TH>
               <TH>Fund</TH>
               <TH numeric>Latest NAV</TH>
+              <TH numeric>YTD</TH>
               <TH numeric>1M</TH>
               <TH numeric>1Y</TH>
               <TH numeric>3Y</TH>
@@ -161,6 +162,7 @@ export default async function FundsPage({ searchParams }: PageProps<"/funds">) {
                   </p>
                 </TD>
                 <TD numeric>{formatCurrency(fund.latest_nav, fund.currency)}</TD>
+                <TD numeric>{formatPercent(fund.perf_ytd, { signed: true })}</TD>
                 <TD numeric>{formatPercent(fund.perf_1m, { signed: true })}</TD>
                 <TD numeric>{formatPercent(fund.perf_1y, { signed: true })}</TD>
                 <TD numeric>{formatPercent(fund.perf_3y, { signed: true })}</TD>

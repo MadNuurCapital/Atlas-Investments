@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="app-backdrop flex min-h-screen flex-col">
       <div className="flex justify-end p-4">
         <ThemeToggle />
       </div>
@@ -13,9 +13,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
           <div className="mb-8 flex justify-center">
             <AtlasLogo size="lg" />
           </div>
-          <div className="rounded-lg border border-[var(--border)] bg-surface p-6 shadow-sm">
-            {children}
-          </div>
+          <div className="glass rounded-[var(--radius)] p-6">{children}</div>
         </div>
       </main>
 

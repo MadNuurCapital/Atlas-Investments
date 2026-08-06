@@ -195,4 +195,64 @@ select test.row_count(
        and status = 'archived' and archive_reason is not null$$,
   1, 'Archiving with a reason is accepted');
 
+-- =====================================================================
+-- Past performance: provenance
+--
+-- Regression cover for migration 20260806000002. Before it, the scheduled
+-- refresh recomputed every figure and wrote the result unconditionally, so
+-- a five-year return typed from a factsheet was erased by a fund with three
+-- weeks of downloaded prices. `perf_manual_keys` records which figures a
+-- person owns; the constraint below is what stops a typo in application
+-- code from quietly failing to protect one.
+-- =====================================================================
+
+select test.act_as_service();
+
+insert into public.funds (id, name, share_class, currency, category)
+values ('f0000000-1111-1111-1111-111111111111', 'Provenance Test Fund', 'A', 'SGD', 'Equity');
+
+select test.row_count(
+  $$select 1 from public.funds
+     where id = 'f0000000-1111-1111-1111-111111111111'
+       and perf_manual_keys = '{}'$$,
+  1, 'A new fund claims no performance figures — everything is derivable');
+
+update public.funds
+   set perf_manual_keys = array['ytd', '1y', '5y']
+ where id = 'f0000000-1111-1111-1111-111111111111';
+
+select test.row_count(
+  $$select 1 from public.funds
+     where id = 'f0000000-1111-1111-1111-111111111111'
+       and 'ytd' = any(perf_manual_keys)
+       and '5y' = any(perf_manual_keys)$$,
+  1, 'A fund can claim individual performance figures as hand-entered');
+
+select test.throws(
+  $$update public.funds set perf_manual_keys = array['2y']
+     where id = 'f0000000-1111-1111-1111-111111111111'$$,
+  'A period that does not exist CANNOT be claimed');
+
+select test.throws(
+  $$update public.funds set perf_manual_keys = array['1y', 'yeartodate']
+     where id = 'f0000000-1111-1111-1111-111111111111'$$,
+  'A misspelled period key is refused rather than silently ignored');
+
+select test.row_count(
+  $$select 1 from public.funds
+     where id = 'f0000000-1111-1111-1111-111111111111'
+       and perf_manual_keys = array['ytd', '1y', '5y']$$,
+  1, 'The refused writes left the existing claims untouched');
+
+-- Year to date is a real column, not only a key.
+update public.funds
+   set perf_ytd = 0.0734
+ where id = 'f0000000-1111-1111-1111-111111111111';
+
+select test.row_count(
+  $$select 1 from public.funds
+     where id = 'f0000000-1111-1111-1111-111111111111'
+       and perf_ytd = 0.0734$$,
+  1, 'Year-to-date is stored as a decimal fraction like every other rate');
+
 select test.report();

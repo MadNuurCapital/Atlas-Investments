@@ -20,6 +20,16 @@ import { toISODate, addMonths, parseDate } from "@/lib/calc/dates";
 export type FormState = {
   errors?: Record<string, string>;
   message?: string;
+  /**
+   * Whether `message` reports success.
+   *
+   * Server actions carry one message field for both outcomes, and without
+   * this every form had to guess. They guessed differently: the fund form
+   * rendered "Saved." in alarm red, while the client form silently swallowed
+   * it and gave no confirmation at all. Set it on every message and render
+   * through `FormNotice`, which reads it.
+   */
+  ok?: boolean;
 };
 
 /* ---------------------------------------------------------------- clients */
@@ -101,7 +111,7 @@ export async function updateClientRecord(
 
   revalidatePath(`/clients/${clientId}`);
   revalidatePath("/clients");
-  return { message: "Saved." };
+  return { ok: true, message: "Saved." };
 }
 
 const archiveSchema = z.object({
@@ -295,7 +305,7 @@ export async function updateHolding(
   });
 
   revalidatePath(`/clients/${clientId}`);
-  return { message: "Saved." };
+  return { ok: true, message: "Saved." };
 }
 
 export async function archiveHolding(

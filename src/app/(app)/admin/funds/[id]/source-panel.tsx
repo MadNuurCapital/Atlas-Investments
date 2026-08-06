@@ -93,6 +93,20 @@ export function SourcePanel({
         so expect some funds to have no usable symbol.
       </p>
 
+      {/*
+       * Verifying reloads this page so the new badges appear, and a reload
+       * discards anything typed into the fund form above that has not been
+       * saved. Saying so is cheap; losing a screen of factsheet figures and
+       * not knowing why is not.
+       */}
+      <p className="mb-4 flex items-start gap-2 rounded-[var(--radius)] border border-[var(--warning)]/25 bg-[var(--warning-surface)] p-3 text-sm text-[var(--warning)]">
+        <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+        <span>
+          Save the fund details above first. Verifying a symbol reloads this
+          page, and any unsaved typing in those boxes is lost.
+        </span>
+      </p>
+
       <form action={formAction} className="flex flex-wrap items-end gap-3">
         <Field
           label="Yahoo Finance symbol"

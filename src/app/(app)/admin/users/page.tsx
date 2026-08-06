@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth/dal";
 import { formatSgDate } from "@/lib/format";
 import { InviteForm } from "./invite-form";
 import { UserRowActions } from "./user-row-actions";
+import { UserNameCell } from "./user-name-cell";
 
 export const metadata: Metadata = { title: "Users" };
 
@@ -48,14 +49,11 @@ export default async function UsersPage() {
               return (
                 <TR key={user.id}>
                   <TD>
-                    <span className="font-medium text-foreground">
-                      {user.full_name || "—"}
-                    </span>
-                    {isSelf && (
-                      <Badge tone="info" className="ml-2">
-                        You
-                      </Badge>
-                    )}
+                    <UserNameCell
+                      userId={user.id}
+                      fullName={user.full_name}
+                      isSelf={isSelf}
+                    />
                   </TD>
                   <TD>
                     <span className="text-sm text-muted-foreground">{user.email}</span>

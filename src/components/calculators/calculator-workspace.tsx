@@ -33,6 +33,7 @@ import {
   type CalculatorMeta,
 } from "@/lib/calculators/registry";
 import { formatPercent, formatSgd } from "@/lib/format";
+import { cn } from "@/lib/cn";
 import { saveCalculation, type SaveState } from "@/app/(app)/calculators/actions";
 
 type Inputs = Record<string, number>;
@@ -119,6 +120,12 @@ export function CalculatorWorkspace({
           {isAffordability ? (
             <Card>
               <CardTitle>Share of surplus</CardTitle>
+              {/*
+               * The filled part of the track is painted from the value.
+               * No browser exposes a "progress" pseudo-element on a range
+               * input that both engines agree on, so a gradient stop moved
+               * to the thumb position is the portable way to show fill.
+               */}
               <input
                 type="range"
                 min={5}
@@ -126,7 +133,14 @@ export function CalculatorWorkspace({
                 step={1}
                 value={Math.round(surplusShare * 100)}
                 onChange={(event) => setSurplusShare(Number(event.target.value) / 100)}
-                className="w-full accent-[var(--brand-500)]"
+                className="slider-gold"
+                style={{
+                  ["--slider-track" as string]: `linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-gold) ${
+                    ((surplusShare * 100 - 5) / 55) * 100
+                  }%, var(--surface-sunken) ${
+                    ((surplusShare * 100 - 5) / 55) * 100
+                  }%, var(--surface-sunken) 100%)`,
+                }}
                 aria-label="Share of monthly surplus"
               />
               <p className="mt-1 text-sm text-muted-foreground">
@@ -340,12 +354,17 @@ function Results({
             </div>
           ))}
         </div>
-        <div className="mt-4 rounded-md bg-[var(--info-surface)] p-3">
-          <p className="text-sm text-foreground">
-            At the {Math.round(surplusShare * 100)}% you selected:{" "}
-            <span className="tabular font-semibold">{formatSgd(result.chosen)}</span> a
-            month.
+        {/* The advisor's own choice is the answer they came for, so it is
+            the one figure given the headline treatment. The three bands
+            above are context for it, not competitors to it. */}
+        <div className="mt-5 rounded-[var(--radius)] border border-[var(--accent-gold)]/25 bg-[var(--info-surface)] p-5">
+          <p className="text-xs font-medium uppercase tracking-wide text-subtle-foreground">
+            At the {Math.round(surplusShare * 100)}% you selected
           </p>
+          <p className="headline-figure mt-1 text-4xl font-bold">
+            {formatSgd(result.chosen)}
+          </p>
+          <p className="mt-0.5 text-sm text-muted-foreground">a month</p>
         </div>
       </Card>
     );
@@ -515,7 +534,18 @@ function Results({
             return (
               <div
                 key={scenario}
-                className="rounded-lg border border-[var(--border)] p-5"
+                /*
+                 * The middle scenario is emphasised, the other two are not.
+                 * Three identically-styled figures make the reader choose
+                 * which to believe; the central case is the one to discuss,
+                 * with the outer two as the range around it.
+                 */
+                className={cn(
+                  "rounded-[var(--radius)] border p-5",
+                  scenario === "moderate"
+                    ? "border-[var(--accent-gold)]/30 bg-[var(--info-surface)]"
+                    : "border-[var(--border)]",
+                )}
               >
                 <p className="text-xs font-medium uppercase tracking-wide text-subtle-foreground">
                   {SCENARIO_LABELS[scenario]}
@@ -529,7 +559,14 @@ function Results({
                   </p>
                 ) : (
                   <>
-                    <p className="tabular mt-3 text-2xl font-semibold text-foreground">
+                    <p
+                      className={cn(
+                        "tabular mt-3 font-semibold",
+                        scenario === "moderate"
+                          ? "headline-figure text-3xl font-bold"
+                          : "text-2xl text-foreground",
+                      )}
+                    >
                       {formatSgd(row.amount)}
                     </p>
                     <p className="text-xs text-muted-foreground">{result.unit}</p>

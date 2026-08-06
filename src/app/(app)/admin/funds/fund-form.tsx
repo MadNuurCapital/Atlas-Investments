@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardTitle, ErrorNotice } from "@/components/ui/card";
+import { Card, CardTitle, FormNotice } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import type { FormState } from "../../clients/actions";
 import type { Fund } from "@/lib/supabase/types";
@@ -188,7 +188,7 @@ export function FundForm({
       </Card>
 
       <Card>
-        <CardTitle>Past performance</CardTitle>
+        <CardTitle accent>Past performance</CardTitle>
         <p className="mb-4 text-sm text-muted-foreground">
           Enter whole percentages from the factsheet, e.g. <code>5.2</code> for
           5.2%. Leave a field blank if the factsheet does not state it — blank
@@ -196,9 +196,19 @@ export function FundForm({
           These figures are never used as a projection assumption.
         </p>
 
-        <div className="grid gap-5 sm:grid-cols-3 lg:grid-cols-6">
+        <p className="mb-5 rounded-[var(--radius)] border border-[var(--info)]/25 bg-[var(--info-surface)] p-3 text-sm text-muted-foreground">
+          <strong className="font-medium text-foreground">
+            Anything you type here is yours.
+          </strong>{" "}
+          The daily refresh calculates these figures from price history, but it
+          will not overwrite a box you have filled in. Clear a box and save to
+          hand that figure back to the automatic update.
+        </p>
+
+        <div className="grid gap-5 sm:grid-cols-3 lg:grid-cols-7">
           {(
             [
+              ["perf_ytd", "Year to date", fund?.perf_ytd],
               ["perf_1m", "1 month", fund?.perf_1m],
               ["perf_6m", "6 months", fund?.perf_6m],
               ["perf_1y", "1 year", fund?.perf_1y],
@@ -220,7 +230,7 @@ export function FundForm({
         </div>
       </Card>
 
-      {state.message && <ErrorNotice>{state.message}</ErrorNotice>}
+      <FormNotice message={state.message} ok={state.ok} />
 
       <div className="flex items-center gap-3">
         <Submit label={submitLabel} />
