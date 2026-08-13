@@ -237,7 +237,7 @@ never be indexed or embedded.
 | --- | --- |
 | TypeScript, strict | clean |
 | ESLint | clean |
-| Unit tests | 150 passing |
+| Unit tests | 160 passing |
 | Database assertions | 133 passing, against a real PostgreSQL built from the migrations |
 | Production build | 33 routes |
 | Secret-leak scan | no server secret in any browser bundle |
@@ -291,6 +291,12 @@ money teach people to distrust every number on screen.
   `funds.perf_manual_keys`.
 - **Every route has a `loading.tsx`.** A page that thinks for five seconds
   while showing the previous screen reads as broken, not busy.
+- **A write is never re-read to find out what it did.** An action that
+  applies values already knows them. Re-fetching makes correctness depend on
+  read-after-write visibility, which is not guaranteed.
+- **Every write that RLS could hide ends in `.select()`.** PostgREST reports
+  a row the policy refused as zero rows and no error, so a write without
+  `.select()` cannot tell "saved" from "silently discarded".
 - **Archive, never delete.**
 
 ---

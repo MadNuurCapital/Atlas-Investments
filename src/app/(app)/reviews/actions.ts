@@ -141,20 +141,53 @@ export async function completeReview(
 
   for (const { holdingId, value } of updatedValues) {
     if (value === null) continue;
-    const { error } = await supabase
+    const { data: affected, error } = await supabase
       .from("client_holdings")
       .update({
         current_value: value,
         current_value_as_of: parsed.data.review_date,
       })
-      .eq("id", holdingId);
+      .eq("id", holdingId)
+      // `.select()` matters. Without it an update that matches no rows —
+      // because Row Level Security hid them — returns no error at all, and
+      // the review would go on to record a value that was never stored.
+      .select("id");
 
     if (error) return { message: `Could not update a holding: ${error.message}` };
+
+    if (!affected || affected.length === 0) {
+      return {
+        message:
+          "That holding could not be updated. It may have been archived or reassigned — reload this page and try again.",
+      };
+    }
   }
 
-  // --- 2. Recompute with the new values ----------------------------------
-  const refreshed = await getClient(clientId, parsed.data.review_date);
-  if (!refreshed) return { message: "This client is no longer available." };
+  // --- 2. Merge the applied values -------------------------------------
+  //
+  // Deliberately NOT a second read of the client.
+  //
+  // This used to re-fetch and rebuild the snapshot from whatever came back,
+  // which made completing a review depend on the write above being visible
+  // to the very next read. When it was not, every holding still looked
+  // unvalued, the snapshot came out empty, and the advisor was told to
+  // "record a current value" — the exact thing they had just done, on the
+  // screen in front of them. It struck hardest on a client's FIRST review,
+  // where no holding had a previous value to fall back on.
+  //
+  // The action already knows what it applied. Using that is correct, immune
+  // to read-after-write lag, and one round trip cheaper.
+  const applied = new Map(updatedValues.map(({ holdingId, value }) => [holdingId, value]));
+
+  const valued = client.holdings
+    .map((holding) => {
+      const submitted = applied.get(holding.id);
+      // A blank box leaves the stored value alone rather than clearing it.
+      const currentValue =
+        submitted !== undefined && submitted !== null ? submitted : holding.current_value;
+      return { holding, currentValue };
+    })
+    .filter((entry) => entry.currentValue !== null);
 
   // --- 3. Replace the snapshots -----------------------------------------
   // A correction rebuilds them wholesale. Snapshot rows themselves are
@@ -164,48 +197,50 @@ export async function completeReview(
     await supabase.from("review_holding_snapshots").delete().eq("review_id", reviewId);
   }
 
-  const snapshots = refreshed.holdings
-    .filter((holding) => holding.totals.adjustedValue !== null)
-    .map((holding) => {
-      const totals = computeHoldingTotals(
-        {
-          initialLumpSum: holding.initial_lump_sum,
-          monthlyContribution: holding.monthly_contribution,
-          startDate: holding.start_date,
-          currentValue: holding.current_value,
-          contributionsCeasedOn: holding.contributions_ceased_on,
-          contributedOverride: holding.contributed_override,
-          transactions: holding.transactions.map((t) => ({
-            type: t.type,
-            amount: t.amount,
-            newMonthlyAmount: t.new_monthly_amount,
-            effectiveDate: t.effective_date,
-          })),
-        },
-        parsed.data.review_date,
-      );
+  const snapshots = valued.map(({ holding, currentValue }) => {
+    const totals = computeHoldingTotals(
+      {
+        initialLumpSum: holding.initial_lump_sum,
+        monthlyContribution: holding.monthly_contribution,
+        startDate: holding.start_date,
+        currentValue,
+        contributionsCeasedOn: holding.contributions_ceased_on,
+        contributedOverride: holding.contributed_override,
+        transactions: holding.transactions.map((t) => ({
+          type: t.type,
+          amount: t.amount,
+          newMonthlyAmount: t.new_monthly_amount,
+          effectiveDate: t.effective_date,
+        })),
+      },
+      parsed.data.review_date,
+    );
 
-      return {
-        review_id: reviewId,
-        holding_id: holding.id,
-        provider: holding.provider,
-        product_name: holding.product_name,
-        fund_display_name: holding.fundDisplayName,
-        status: holding.status,
-        monthly_contribution: totals.monthlyContributionNow,
-        total_contributed: totals.totalContributed,
-        current_value: holding.current_value ?? 0,
-        withdrawals_to_date: totals.withdrawals,
-        dividends_to_date: totals.dividends,
-        gain_loss_amount: totals.gainLoss ?? 0,
-        gain_loss_fraction: totals.gainLossFraction,
-      };
-    });
+    return {
+      review_id: reviewId,
+      holding_id: holding.id,
+      provider: holding.provider,
+      product_name: holding.product_name,
+      fund_display_name: holding.fundDisplayName,
+      status: holding.status,
+      monthly_contribution: totals.monthlyContributionNow,
+      total_contributed: totals.totalContributed,
+      current_value: currentValue as number,
+      withdrawals_to_date: totals.withdrawals,
+      dividends_to_date: totals.dividends,
+      gain_loss_amount: totals.gainLoss ?? 0,
+      gain_loss_fraction: totals.gainLossFraction,
+    };
+  });
 
   if (snapshots.length === 0) {
+    // Distinguish the two reasons, because the advice differs and the old
+    // single message was actively misleading in the second case.
     return {
       message:
-        "Record a current value for at least one holding before completing this review.",
+        client.holdings.length === 0
+          ? "This client has no holdings yet. Add one on the Investments tab before completing a review."
+          : "Enter a current value for at least one holding above, then complete the review.",
     };
   }
 
@@ -298,7 +333,7 @@ export async function saveReviewDraft(
 
   revalidatePath(`/reviews/${reviewId}`);
   revalidatePath(`/clients/${clientId}`);
-  return { message: "Draft saved." };
+  return { ok: true, message: "Draft saved." };
 }
 
 export async function abandonReview(reviewId: string, clientId: string): Promise<never> {
